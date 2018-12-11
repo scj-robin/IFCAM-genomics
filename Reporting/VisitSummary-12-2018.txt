@@ -1,0 +1,17 @@
+I try to summarize the various discussions we had about different leads for the IFCAM project. I see 3 main leads, of which one is abandoned.
+
+(A) - data integration of genomic, transciptomic and methylation data for the cervical (?) cancer project on the Indian side
+
+(B) - clustering of single cell data of the lymphoma (?) project on French (Montpellier) side
+
+(C) - data integration on public data similar to (A).
+
+After discussion, the lead (C) appers to be too artificial and is abandoned.
+
+For (A), a first question is to understand the effect of methylation of gene expression in the specific setting of this project, that is based on paired 'case-control' data. This can be done using regression models, averaging the methylation signal over sub-regions such as upstream, body and downstream of the gene. Because the number of patients is still low, borrowing information from one gene to another would be desirable so mixture of regression could be considered. Preliminary analysis to see if regressions coefficient seem to display a cluster structure are to be carried. The conception and implementation of a mixture model will be considered then.
+
+One remaining issue about (A) is the availability of the data for both partners (Indian and French).
+
+For (B), the problem is to determine sub-group of cells within a population of ~1000 cells, based on the expression of ~3000 genes. Naive clustering based on the 3000 gene expression does not provide relevent clusters, but inferring a 'copy number' for each chromosome arm and then cluster the cell based on this summarized signal seems to provide interesting results. This can be viewed as a targeted dimension reduction procedure, that we could try to formalize more precisely. 
+
+The data (B) are available, but no publication could be considered before the publication of these data, which should occur in about 18 months.
