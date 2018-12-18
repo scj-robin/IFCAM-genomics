@@ -1,0 +1,11 @@
+T17225-counts.tsv.gz
+	Raw count matrix of patient T17225: each column is a cell (their name is a 16-base tag) and each line is a gene (all 27761 genes from the human GrCH38 genome reference)
+	
+Profile_T17225.pdf
+	Copy number for patient T17225 infered from SNParray (raw data available but too large)	
+	
+Corresp_features.txt
+	Gives the translation of gene names from Ensembl Ids to Gene symbols	
+
+gene_span.txt
+	Gives the location of each gene	
