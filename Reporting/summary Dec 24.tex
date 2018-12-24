@@ -1,0 +1,132 @@
+%&latex
+\documentclass[11pt]{article}
+\usepackage{amsmath}
+\usepackage{graphicx,psfrag,epsf}
+\usepackage{enumerate}
+\usepackage{natbib}
+\usepackage{url} % not crucial - just used below for the URL
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{newlfont}
+\usepackage{mathrsfs}
+\newtheorem{theorem}{Theorem}
+\theoremstyle{remark}
+\newtheorem{rem}{Remark}[section]
+\DeclareMathOperator{\plim}{plim}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   PACKAGE FROM PREVIOUS .tex FILE     %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{rotating}
+\usepackage{longtable}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{ifpdf}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{breqn}
+\usepackage[superscript]{cite}
+\usepackage{setspace}
+\usepackage{ulem}
+\usepackage{caption}
+\usepackage{rotating}
+\usepackage{booktabs,makecell}
+\usepackage{multirow}
+\usepackage[table]{xcolor}
+\usepackage{hyperref}
+\usepackage{amsmath}
+
+%%%%%%%%%%%%%%%%%%%%
+
+%\pdfminorversion=4
+% NOTE: To produce blinded version, replace "0" with "1" below.
+\newcommand{\blind}{0}
+
+% DON'T change margins - should be 1 inch all around.
+\addtolength{\oddsidemargin}{-.5in}%
+\addtolength{\evensidemargin}{-.5in}%
+\addtolength{\textwidth}{1in}%
+\addtolength{\textheight}{-.3in}%
+\addtolength{\topmargin}{-.8in}%
+
+\date{}
+
+\begin{document}
+%\bibliographystyle{natbib}
+
+%\def\spacingset\#1{\renewcommand{\baselinestretch}%
+%${\#1}\small\normalsize} \spacingset{1}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\textit{Project I:} {\bf Integrating omics data viz. methylome, exome and transcriptome on 12 paired oral cancer samples taking into account the three dimensional configuration of tissue specific DNA}
+
+{\bf \textit{Background}}: Alteration in the genetic and epigenetic sequences often affects simple/complex traits by regulating the expression levels of various genes. The aberrant sequences adjacent and/or within the gene potentially alters the expression of that gene. Besides, in the genome, long range interaction occurs between genomic sequences and genes that are located linearly apart, but close in the 3D space possibly due to chromosomal folding. In other words, alteration in the heritable genetic and/or epigenetic sequences located in a gene or in the intergenic region, might affect the adjacent genes in the 3D space. Hence it would to interesting and informative to look at the joint effect of genetic and epigenetic variations on the expression of adjacent genes located linearly or in the 3D space.
+
+{\bf \textit{Aim}}: To find the gene signature corresponding to the concerned trait.
+
+{\bf \textit{Idea}}: To think of a model that would identify the effect of variation in the genomic sequences on the gene regulation taking into account the spatial structure of the chromosome.
+
+{\bf \textit{Data}}: We have 12 paired oral cancer samples with data on Whole genome bisulphite sequencing (WGBS) data, whole exome mutation and whole genome gene expression data. The three omics data overlap for $1693$ genes across the autosomes.
+
+{\bf \textit{Notation}}: $Y_{ik}$: (difference) in gene expression of gene $i$ and patient $k$
+$x_{ik}$: mean methylation of gene $i$ and patient $k$
+$m_{ik}$: (presence/absence) mutation of gene $i$ and patient $k$
+$\epsilon_{ik}$: error of gene $i$ and patient $k$
+
+To start with, we may consider the following approaches:\\
+
+{\bf \large{Method 1}}: 
+\begin{itemize}
+\item Check the models gene by gene to see whether methylation has any effect of gene expression
+\item Cluster the genes based on some kind of classification. For instance, group them into three classes where methylation has positive, negative or no effect on the expression of the genes.
+\item Combine the genes using mixture model in each cluster. {\color{blue} IM: can you please clarify what we are going to do using mixture model? As I understand, in each cluster, we can apply mixture model but what is the ultimate conclusion that we are aiming at? Please give some more details on this issue.}
+\item Combine the mutation profile for models.
+\end{itemize}
+
+{\bf \large{Method 2:}}
+\begin{itemize}
+\item We can explore the same problem using a bivariate model (suggested by Sarmistha (SD)). But before that we have to identify such closely located (physically) genes through HiC data. Or we can think of considering all possible $n^2$ pairs of genes for this analysis.
+\item another option for subgrouping genes: we can classify methylation sites (for each gene) into three subgroups viz, upstream, gene body, and downstream parts. Then apply the above method.
+\end{itemize}
+
+\vspace{1cm}
+
+\textit{Project 2:} {\bf Identify a problem in this same line with respect to HiC data.}
+
+\begin{itemize}
+\item First try to identify publicly available data for HiC.
+\item Look into the tissue specific HiC data to find the genes located closely in the 3D space.
+\item Try to use the HiC correlation map, to find the effect of the variation in genomic sequence (adjacent linearly or in the 3D space to a gene) on the gene regulation.
+\end{itemize}
+
+\vspace{1cm}
+
+\textit{Project 3:} {\bf Single-cell data analysis} \\
+
+First we need to identify the problem and formalise it.
+
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
