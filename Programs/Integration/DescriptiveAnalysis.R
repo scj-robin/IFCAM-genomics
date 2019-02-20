@@ -11,6 +11,7 @@ Mutation = readRDS("../../Data/Integration/mutation.Rds")
 
 # Functions
 F_PlotSelectMethExp <- function(MethTab, ExpTab, location){
+   # MethTab = MethDiff; ExpTab = LogExpDiff; location='Body'
    # Plots expression, vs mean methylation for a given probe location type
    # MethTab=MethDiff; ExpTab=LogExpDiff; location = 'Body'
    if(location=='All'){
@@ -31,6 +32,11 @@ F_PlotSelectMethExp <- function(MethTab, ExpTab, location){
    plot(MethTabSelect, ExpTabSelect, col=GeneColor, pch=GeneColor, main=location)
    plot(MethTabSelect, ExpTabSelect, col=PatientColor, pch=PatientColor)
    plot(MethTabSelect, ExpTabSelect, col=StatusColor, pch=StatusColor)
+   reg.coef = sapply(1:nrow(MethTabSelect), function(g){
+      try(lm(ExpTabSelect[g, ] ~ MethTabSelect[g, ])$coef[2])
+      })
+   reg.coef = as.numeric(reg.coef[-which(substr(reg.coef, 1, 3)=='Err')])
+   hist(reg.coef, breaks=sqrt(length(reg.coef)), main=length(reg.coef))
 }
 
 # Log-transform for expression

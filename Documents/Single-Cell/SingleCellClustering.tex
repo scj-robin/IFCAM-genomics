@@ -1,0 +1,105 @@
+\documentclass[a4paper, 11pt]{article}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{amsfonts,amssymb,amsmath,amscd,amsthm,latexsym}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\newcommand{\cst}{\text{cst}}
+\newcommand{\Esp}{\mathbb{E}}
+\newcommand{\Mcal}{\mathcal{M}}
+\newcommand{\Ncal}{\mathcal{N}}
+\newcommand{\lambdat}{\widetilde{\lambda}}
+\newcommand{\Xc}{\check{X}}
+\newcommand{\Yc}{\check{Y}}
+\newcommand{\Yt}{\widetilde{Y}}
+
+\title{Single cell clustering}
+\author{AC, EL, TMH, SR}
+
+\begin{document}
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Problem and notations}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Notations.}
+\begin{itemize}
+ \item $i = 1 ... n$ cells
+ \item $j = 1 ... p$ genes
+ \item $Y_{ij} =$ log-expression
+ \item $K$ groups
+ \item $Z_i =$ cell membership
+ expression
+\end{itemize}
+
+\paragraph{Mixture model.}
+\begin{align*}
+ Z_i & \sim \Mcal(1; \pi) \\
+ Y_{ij} \mid Z_i & \sim \Ncal(\mu + \alpha_i + \beta_j + \gamma_{kj}, \sigma_k^2)
+\end{align*}
++ $\gamma_{kj}$ blockwise constant
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Inference via fused-lasso}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Penalized Likelihood.}
+We aim at maximizing
+$$
+\log p_\theta(Y) - n \lambda \sum_k \pi_k \sum_{j\geq 2} |\gamma_{k,j} - \gamma_{k, j-1}|,
+$$
+which amounts at maximizing
+\begin{align*}
+ & \Esp \left(\log p_\theta(Y, Z)  \mid Y\right)- \lambda \sum_k \sum_{j\geq 2} |\gamma_{k,j} - \gamma_{k, j-1}| \\
+ = & \sum_{i, k} \tau_{ik} \left(\log \pi_k - \frac12 \sum_j \left( \log\sigma^2_k - \frac1{\sigma^2_k} (Y_{ij} - \mu - \alpha_i - \beta_j - \gamma_{kj})^2 \right) \right) \\
+ & \quad - n \lambda \sum_k \pi_k \sum_{j\geq 2} |\gamma_{k,j} - \gamma_{k, j-1}| + \cst
+\end{align*}
+
+\paragraph{Estimating the $\gamma_{kj}$} amounts at minimizing (all other parameters being known),
+\begin{align*}
+ & \sum_i \tau_{ik} \sum_j (\Yt_{ij} -\gamma_{kj})^2  + 2 n \pi_k \lambda \sigma^2_k \sum_{j\geq 2} |\gamma_{k,j} - \gamma_{k, j-1}| \\
+ = & \sum_i \tau_{ik} \|\Yt_i -\gamma_k\|^2  + 2 n \pi_k \lambda \sigma^2_k \sum_{j\geq 2} |\gamma_{k,j} - \gamma_{k, j-1}| \\
+ = & \sum_i \tau_{ik} \|\Yt_i - X_i \delta_k\|^2  + 2 n \pi_k \lambda \sigma^2_k \sum_{j\geq 2} |\delta_{k,j}| \\
+ = & \sum_i \|\Yc_i - \Xc_i \delta_k\|^2  + 2 n \pi_k \lambda \sigma^2_k \sum_{j\geq 2} |\delta_{k,j}| \\ 
+ = & \|\Yc - \Xc \delta_k\|^2  + \lambdat_k \sum_{j\geq 2} |\delta_{k,j}| 
+\end{align*}
+where 
+\begin{itemize}
+ \item $\Yt_{ij} = Y_{ij} - \mu - \alpha_i - \beta_j$,
+ \item $X_i$ is the $p \times p$ lower-triagular matrix filled with ones (the same for all $i$), 
+ \item $\delta_{kj} = \gamma_{k,j} - \gamma_{k, j-1}$, 
+ \item $\Yc_i = \text{diag}([\sqrt{\tau_{ik}}]_j) \Yt_i$, $\Xc_i = \text{diag}([\sqrt{\tau_{ik}}]_j) X_i$,
+ \item $\Yc$ (resp $\Xc$) is obtained by piling up the $\Yc_i$ (reps $X_i$).
+\end{itemize}
+This optimization can be carried, for each $k$ using, e.g., {\tt glmnet}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Inference via dynamic programming}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Penalized Likelihood.}
+We aim at maximizing
+$$
+\log p_\theta(Y) - \text{pen}((t_{kq}),
+$$
+where $t_{kq}$ is the $q$th change-point in group $k$, which amounts at maximizing
+\begin{align*}
+ & \Esp \left(\log p_\theta(Y, Z)  \mid Y\right) - \text{pen}((t_{kq}).
+\end{align*}
+Remind that the Zhang \& Siegmund penalty can be combined withthe segments cost.
+
+
+\end{document}
