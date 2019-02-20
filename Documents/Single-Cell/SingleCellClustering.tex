@@ -83,7 +83,7 @@ where
  \item $\Yc_i = \text{diag}([\sqrt{\tau_{ik}}]_j) \Yt_i$, $\Xc_i = \text{diag}([\sqrt{\tau_{ik}}]_j) X_i$,
  \item $\Yc$ (resp $\Xc$) is obtained by piling up the $\Yc_i$ (reps $X_i$).
 \end{itemize}
-This optimization can be carried, for each $k$ using, e.g., {\tt glmnet}.
+This optimization can be carried, for each $k$ using, e.g., {\tt glmnet}, but $\Yc$ is $np \times 1$ and $\Xc$ is $np \times (n+p)$...
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
