@@ -1,0 +1,78 @@
+\documentclass[a4paper, 11pt]{article}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{amsfonts,amssymb,amsmath,amscd,amsthm,latexsym}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\newcommand{\cst}{\text{cst}}
+\newcommand{\Esp}{\mathbb{E}}
+\newcommand{\Ncal}{\mathcal{N}}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\xb}{\overline{x}}
+\newcommand{\Dxb}{\Delta \overline{x}}
+\newcommand{\DY}{\Delta Y}
+
+\title{regression mixture for data integration}
+\author{AC, EL, TMH, SR}
+
+\begin{document}
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Problem and notations}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Problem.} Model the influence of (differential) methylation (and mutation) on the (differential) (log-)expression.
+
+\paragraph{Notations.}
+\begin{itemize}
+ \item $i = 1 ... n$ patients
+ \item $j = 0, 1$ sub-sample status (0 = control, 1 = tumor) in a patient
+ \item $k = 1 ... p$ genes
+ \item $\ell = 1 ... L_k$ locus of methylation sites (for gene $k$)
+ \item $r \in \{\text{5'UTR}, \text{body}, \text{1st exon}, ...\} =$ methylation region 
+ \item $Y_{ijk} =$ (log-)expression of gene $k$ in sub-sample $j$ from patient $i$
+ \item $x_{ijk\ell} =$ methylation at locus $\ell$ for gene $k$ in sub-sample $j$ from patient $i$
+ \item $R_{kr} =$ number of methyation locus in region $r$ of gene $k$
+ \item $m_{ik} =$ mutation (0/1) for gene $k$ in patient $i$
+\end{itemize}
+
+\paragraph{Differences.} We mostly work with differences:
+\begin{itemize}
+ \item $\DY_{ik} = Y_{i1k} - Y_{i0k} =$ differential (log-)expression
+ \item $\Dx_{ik\ell} = x_{i1k\ell} - x_{i0k\ell} =$ differential methylation at locus $\ell$
+ \item $\xb_{ijkr} = R_{kr}^{-1} \sum_{\ell \in r} x_{ijk\ell}=$ mean methylation in region $r$ for gene $k$ in sub-sample $j$ from patient $i$
+ \item $\Dxb_{ikr} = R_{kr}^{-1} \sum_{\ell \in r} \Dx_{ik\ell} = \xb_{i1kr} - \xb_{i0kr}$ mean differential methylation in region $r$
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{First analyses}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+For each region $r$ and for each gene $k$, we performed two regression models:
+\begin{align*}
+  Y_{ijk} & = a_{kr} + b_{kr} \xb_{ijkr} + E_{ijk} & \text{(sub-sample)}, \\
+  \DY_{ik} & = a'_{kr} + b'_{kr} \Dxb_{ikr} + E_{ik} & \text{(differential)}.
+\end{align*}
+The aim was 
+\begin{enumerate}
+\item if some relation between $\xb_{ijkr}$ and $Y_{ijk}$ (or $\Dxb_{ikr}$ and $\DY_{ik}$) can be observed by visual inspection and
+\item to check if the regression coefficients $b_{kr}$ or $b'_{kr}$ display a mixture distribution.
+\end{enumerate}
+On the small dataset we have, none of this is obvious.
+
+
+
+
+\end{document}
