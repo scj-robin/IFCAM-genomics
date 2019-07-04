@@ -1,5 +1,5 @@
 F_KerFdr <- function(P){
-   library(KernSmooth); library(mclust); library(Matrix)
+   library(KernSmooth); library(mclust); 
 
    # Data and sorting
    n = length(P); X = -qnorm(P); Xorder = order(X); Xrank = rank(X); 
