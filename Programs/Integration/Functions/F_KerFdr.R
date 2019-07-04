@@ -1,10 +1,12 @@
-F_KerFdr <- function(P){
-   library(KernSmooth); library(mclust); library(Matrix)
+F_KerFdr <- function(P, plotting=F){
+   library(KernSmooth); library(mclust); 
+   
+   if(plotting){par(mfrow=c(4, 4), mex=.6, pch=20)}
 
    # Data and sorting
    n = length(P); X = -qnorm(P); Xorder = order(X); Xrank = rank(X); 
-   par(mfrow=c(2, 2), pch=20, lwd=1); 
-
+   if(plotting){hist(P, breaks=sqrt(n)); plot(sort(P), (1:n)/n); hist(X, breaks=sqrt(n))}
+   
    # Estimate of pi0 and phi0
    p0 = 2*sum((P > .5))/n; phi0 = dnorm(X)
 
@@ -21,8 +23,7 @@ F_KerFdr <- function(P){
    tau = GM$z[, which.max(GM$parameters$mean)]; 
 
    # Algo
-   par(mfrow=c(4, 4), mex=.6, pch=20, cex=.5, lwd=2)
-   hist(P, breaks=sqrt(n), main='')
+   # hist(P, breaks=sqrt(n), main='')
    tol = 1e-5; diff = 2*tol; iter = 0
    while(diff > tol){
       iter = iter+1; # cat(iter, '')
@@ -31,11 +32,14 @@ F_KerFdr <- function(P){
       # f : rectangular kernel
       f = rep(0, n)
       sapply(1:n, function(i){f[Xneighbors[[i]]] <<- f[Xneighbors[[i]]] + tau[i]*h.inv})
+      f[which(X < -1)] = 0
       f = f / sum(tau)
       if(iter%%10==0){
-         # plot(X[Xorder], (1-p0)*f[Xorder], type='l', xlab='', ylab='', main=iter); 
-         # lines(X[Xorder], p0*phi0[Xorder], col=4)
-         cat(i, '(', diff, ') ')
+         if(plotting){
+            plot(X[Xorder], (1-p0)*f[Xorder], type='l', xlab='', ylab='', main=iter);
+            lines(X[Xorder], p0*phi0[Xorder], col=4)
+         }
+         cat(iter, '(', diff, ') ')
       }
       # Tau
       g = p0*phi0 + (1 - p0) * f
@@ -45,11 +49,12 @@ F_KerFdr <- function(P){
       tau = tauNew
    }
 
-   # Post-processing tau
-   tauSort = tau[Xorder]
-   tauMinIndex = max(which(tauSort <= 1e-2))
-   tauSort[1:tauMinIndex] = 1e-2
-   tau = tauSort[Xrank]
+   # # Post-processing tau
+   # tauSort = tau[Xorder]
+   # tauMinIndex = max(which(tauSort <= 1e-2))
+   # tauSort[1:tauMinIndex] = 1e-2
+   # tau = tauSort[Xrank]
+   if(plotting){plot(X, tau)}
    
    return(list(p0=p0, f1=f, tau=tau))
 }
