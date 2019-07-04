@@ -35,7 +35,7 @@ F_KerFdr <- function(P){
       if(iter%%10==0){
          # plot(X[Xorder], (1-p0)*f[Xorder], type='l', xlab='', ylab='', main=iter); 
          # lines(X[Xorder], p0*phi0[Xorder], col=4)
-         cat(i, '(', diff, ') ')
+         cat(iter, '(', diff, ') ')
       }
       # Tau
       g = p0*phi0 + (1 - p0) * f
