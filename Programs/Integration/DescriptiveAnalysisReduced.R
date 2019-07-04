@@ -124,10 +124,3 @@ plot(unlist(PvalX), unlist(PvalJoint), log='xy', col=Color)
 plot(unlist(PvalY), unlist(PvalJoint), log='xy', col=Color)
 plot(unlist(PvalX), unlist(PvalY), log='xy', col=Color)
 
-# Nul prod distribution
-par(mfrow=c(1, 1))
-B = 1e4
-H = hist(rt(B, df=df)*rt(B, df=df), breaks=sqrt(B))
-w = mean(diff(H$breaks))
-x.list = seq(-5, 5, length.out=101)
-lines(x.list, B/2*w*exp(-abs(sqrt(2)*x.list)), col=2, lwd=2)
