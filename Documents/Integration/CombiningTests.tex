@@ -1,0 +1,137 @@
+\documentclass[a4paper, 11pt]{article}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{amsfonts,amssymb,amsmath,amscd,amsthm,latexsym}
+\usepackage{tikz,graphicx,enumerate}
+\usepackage{natbib}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\newcommand{\cst}{\text{cst}}
+\newcommand{\Esp}{\mathbb{E}}
+\newcommand{\Ibb}{\mathbb{I}}
+\newcommand{\Ncal}{\mathcal{N}}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Tt}{\widetilde{T}}
+\newcommand{\xb}{\overline{x}}
+\newcommand{\Dxb}{\Delta \overline{x}}
+\newcommand{\DY}{\Delta Y}
+
+\title{Combining tests for data integration}
+\author{}
+
+\begin{document}
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Problem and notations}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Problem.} Detect pairs of gene / CpG probes being both associated with the status, that is where both a differential expression and a differential methylation are observed.
+
+\paragraph{Notations.}
+\begin{itemize}
+ \item $i = 1 ... n$ patients
+ \item $j = 0, 1$ sub-sample status (0 = control, 1 = tumor) in a patient
+ \item $k = 1 ... p$ genes
+ \item $\ell = 1 ... L_k$ locus of methylation sites (for gene $k$)
+ \item $Y_{ijk} =$ (log-)expression of gene $k$ in sub-sample $j$ from patient $i$
+ \item $x_{ijk\ell} =$ methylation at locus $\ell$ for gene $k$ in sub-sample $j$ from patient $i$
+\end{itemize}
+
+\paragraph{Tests.} For each gene $k$, we may define a test statistic $T^E_k$ (function of the $(Y_{ijk})$) to test 
+$$
+H_{0k}^E = \left\{\text{gene $k$ has the same expression level in both status}\right\}.
+$$
+Knowing the null (i.e. under $H^E_0$) distribution $F^E_{0k}$ of $T^E_k$ we can get the p-value $P^E_k$. \\
+Similarly, we can define $T^M_{k\ell}$, $H_{0k\ell}^E$, $F^M_{0k\ell}$ and $P^M_{k\ell}$ for the $\ell$th methylation site of gene $k$.
+
+\paragraph{Aims.} We are actually interested in couple $(k, \ell)$ such that both 
+$H_{0k}^E$ and $H_{0k\ell}^E$ are rejected, meaning that we are interested to test
+$$
+H_{0k\ell} = H_{0k}^E \cup H_{0k\ell}^M
+\qquad \text{versus} \qquad 
+H_{1k\ell} = H_{1k}^E \cap H_{1k\ell}^M.
+$$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Resampling strategy}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Problem.} Defining the distribution under the {\sl union} of null hypotheses is not standard. Even resampling is not standard as we need to resample only from this union of nulls.
+
+The proposed strategy consists in
+\begin{enumerate}[($a$)]
+ \item For each hypothesis, compute the conditional probability of $H_0$ and $H_1$ given the observed statistic
+ \item Sample among all the pairs $(k, \ell)$, using the conditional probabilities as weights (to ensure to sample from the union of null hypotheses) to get an estimate of the distribution under the $H_0$.
+ \item Compute the p-value according to this estimated null distribution.
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Proposed procedure}
+
+\paragraph{Step $(a)$: Semi-parametric mixture.} We use the semi-parametric approach introduced by \cite{RBD07}. More specifically, we fit the following mixture model to the probit-transform expression p-values $\Tt^E_k$:
+$$
+\Tt^E_k := -\Phi^{-1}(T^E_k) \sim \pi^E_0 \Ncal(0, 1) + (1 - \pi^E_0) F^E_1
+$$
+where $\Phi$ stands for the cdf of the standard normal distribution. This semi-parametric approach provides estimates of both the proportion $\pi^E_0$ and the alternatif distribution $F^E_1$. A by product of this approach is the conditionnal probability
+$$
+\tau^E_k = \Pr\left\{H^E_{1k} \mid \Tt^E_k\right\} = 1 - \Pr\left\{H^E_{0k} \mid \Tt^E_k\right\}.
+$$
+Test statistics $\Tt^M_{k\ell}$, estimates of $\pi^M_0$ and $F^M_1$ and conditionnal probabilities $\tau^M_{k\ell}$ can be derived for the methylation tests as well.
+
+\paragraph{Step $(b)$: Resampling.} With each pair $(k, \ell)$, we associate the probability
+$$
+\tau_{k\ell} = \tau^E_k \tau^M_{k\ell} \simeq \Pr\left\{H_{1k\ell} \mid \Tt^E_k,  \Tt^M_{k\ell}\right\}
+$$
+and sample $B$ pairs $(k_b, \ell_b)$ among all pairs $(k, \ell)$ with replacement with probabilities $\tau_{k\ell}$. 
+
+\paragraph{Step $(c)$: p-value.} For a given joint statistic 
+$$
+T_{k\ell} = t(\Tt^E_k, \Tt^M_{k\ell})
+$$
+e.g.
+$$
+t(\Tt^E_k, \Tt^M_{k\ell}) = \Tt^E_k \Tt^M_{k\ell}
+\qquad \text{or} \qquad
+t(\Tt^E_k, \Tt^M_{k\ell}) = \min(\Tt^E_k, \Tt^M_{k\ell}).
+$$
+we define the p-value
+$$
+P_{k\ell} = B^{-1} \sum_b \Ibb\{t(\Tt^E_{k_b}, \Tt^M_{k_b\ell_b}) \geq T_{k\ell}\}.
+$$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Remarks}
+
+\paragraph{Pros.} 
+\begin{enumerate}
+ \item The procedure is agnostic with respect to the original test statistics $T^E$ and $T^M$, which can therefore be different, provided their respective null distributions are known. Their transformation into $\Tt^E$ and $\Tt^M$ makes comparable by essence.
+ \item The procedure holds for any joint test statistic $T$, not only for the product or the sum, as proposed here.
+ \item The procedure easily generalizes to more that two joint tests, that is to more that two genomic signals.
+\end{enumerate}
+
+\paragraph{Cons.} 
+\begin{enumerate}
+ \item It is not clear if the procedure is a genuine test procedure, beacause of the non-standard for of '$H_0$'.
+ \item The procedure strongly relies on the estimates of $F^E_1$ and $F^M_1$.
+ \item The definition of the probability $\tau_{k\ell}$ relies on an implicit independence assumption, which does not necessarily make sense for out purpose.
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibliographystyle{plain}
+\bibliography{Reference}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
