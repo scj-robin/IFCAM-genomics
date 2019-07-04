@@ -1,11 +1,11 @@
 rm(list=ls())
-library(magrittr)
+library(betareg)
 
 
         #### Parameters
 
 
-DataRep <- 'D:/IFCAM/DataIntegration/Data/'
+DataRep <- 'D:/IFCAM/IFCAM-genomics/Data/PrivateIntegration/'
 TypeOfTest <-  'Welch'  #  'Wilcoxon' " 'Student' # 
 
 
@@ -28,26 +28,46 @@ TtestFunction <- function(x,y){
   }
   ## Version student
   if (TypeOfTest == 'Student'){
-    Res <- list(TExp = t.test(x~Labs,var.equal=TRUE)$stat, TMeth = sapply(1:nrow(y), function(probe){ t.test(as.numeric(y[probe,])~Labs,var.equal=TRUE)$stat } ))
+    Res <- list(TExp = t.test(x~Labs,var.equal=TRUE)$p.value, TMeth = sapply(1:nrow(y), function(probe){ t.test(as.numeric(y[probe,])~Labs,var.equal=TRUE)$p.value } ))
   }
   ## Version welch
   if (TypeOfTest == 'Welch'){
-    Res <- list(TExp = t.test(x~Labs,var.equal=FALSE)$stat, TMeth = sapply(1:nrow(y), function(probe){ t.test(as.numeric(y[probe,])~Labs,var.equal=FALSE)$stat } ))
+    Res <- list(TExp = t.test(x~Labs,var.equal=FALSE)$p.value, TMeth = sapply(1:nrow(y), function(probe){ t.test(as.numeric(y[probe,])~Labs,var.equal=FALSE)$p.value } ))
   }
   return(Res)
 }
 
 
+TtestWelchAndBeta <- function(x,y){
+  
+  ## Check x for -Inf
+  Labs <- Labels
+  ToBeRemoved <- which(x == -Inf)
+  if(length(ToBeRemoved)>0){
+    x <- x[-ToBeRemoved]
+    Labs <- Labels[-ToBeRemoved]
+    y <- y[,-ToBeRemoved]
+  }
+
+  PExp = t.test(x~Labs,var.equal=FALSE)$p.value
+  PMeth = purrr::map(1:nrow(y), function(probe){ betareg(as.numeric(y[probe,])~Labs) }) %>% 
+    purrr::map(summary) %>%
+    purrr::map(~ .x$coef$mean[2,4]) %>% 
+    reduce(c)
+  Res <- list(PExp=PExp,PMeth=PMeth)  
+  return(Res)
+}
+
         #### Load the data
 
 
-Expression <- readRDS(paste(DataRep,'Expression.rds'))
-Methylation <- readRDS(paste(DataRep,'Methylation.rds'))
-MethylationInfo <- readRDS(paste(DataRep,'MethInfo.rds'))
-GeneInfo <- readRDS(paste(DataRep,'GeneInfo.rds'))
+Expression <- readRDS(paste0(DataRep,'Expression.rds'))
+Methylation <- readRDS(paste0(DataRep,'Methylation.rds'))
+MethylationInfo <- readRDS(paste0(DataRep,'MethInfo.rds'))
+GeneInfo <- readRDS(paste0(DataRep,'GeneInfo.rds'))
 
 ## Get labels 
-Labels <- map(colnames(Expression), ~ substr(.x,nchar(.x),nchar(.x))) %>% 
+Labels <- purrr::map(colnames(Expression), ~ substr(.x,nchar(.x),nchar(.x))) %>% 
   reduce(c)
 
 
@@ -83,7 +103,7 @@ TidyMeth <- Methylation %>%
   mutate(Gene = MethylationInfo$Gene) %>% 
   nest(-Gene) %>% 
   rename(Meth=data) %>% 
-  mutate(Meth = map(Meth, as.data.frame))
+  mutate(Meth = purrr::map(Meth, as.data.frame))
 
 ## Get a tidy Expression dataset
 TidyExp <- Expression %>% 
@@ -91,94 +111,78 @@ TidyExp <- Expression %>%
   rownames_to_column('Gene') %>% 
   nest(-Gene) %>% 
   rename(Exp=data) %>% 
-  mutate(Exp = map(Exp, ~ as.data.frame(.x) %>% as.numeric),
-         LogExp = map(Exp,log))
+  mutate(Exp = purrr::map(Exp, ~ as.data.frame(.x) %>% as.numeric),
+         LogExp = purrr::map(Exp,log))
 
 ## Get a global tidy dataset
 ExpMeth <- TidyMeth %>% 
   left_join(y=TidyExp) %>% 
   left_join(y=GeneDF) %>% 
-  filter(!(Gene %in%NonExp))
+  mutate(NbInfExp = map_dbl(LogExp, ~ sum(.x==-Inf))) %>% 
+  filter(!(Gene %in%NonExp), NbInfExp < 30) 
 ExpMeth
-saveRDS(ExpMeth,paste0(DataRep,'TidyMethylation.rds'))
-
-
-        #### Descriptive analysis
-
-
-## Have a look at the number of probes per gene
-TidyMeth %>% 
-  mutate(NbProbesPerGene = map_int(Meth,nrow)) %>% 
-  summarise_at(.vars = c('NbProbesPerGene'), .funs = c('min','mean','median','max'))
-
-
-## Focus on a gene
-NbProbe = 9
-Example <- TidyMeth %>% 
-  mutate(NbProbesPerGene = map_int(Meth,nrow)) %>% 
-  filter(NbProbesPerGene == NbProbe) %>% 
-  slice(2:2)
-
-Example <- TidyMeth %>% 
-  filter(Gene == 'CASP8') 
-
-
-DF <- t(Example$Meth[[1]])[,1:20]
-Y <- log(1+Expression[Example$Gene,])
-x11()
-par(mfrow=c(ceiling(sqrt(ncol(DF))),round(sqrt(ncol(DF)))))
-for (ii in 1:ncol(DF)){
-  plot(DF[,ii],Y, main = paste("Probe",ii),col=as.factor(Labels))
-}
 
 
         #### Perform analysis
 
 
-ExpMethTest <- ExpMeth %>% 
-  mutate(Test = map2(Exp,Meth,TtestFunction))
-saveRDS(ExpMethTest, paste0(DataRep,'ExpMeth_',TypeOfTest,'.rds'))
+# ExpMethTest <- ExpMeth %>% 
+#   mutate(Test = map2(Exp,Meth,TtestWelchAndBeta))
+# saveRDS(ExpMethTest, paste0(DataRep,'ExpMeth_',TypeOfTest,'.rds'))
 
-TTest.E <- ExpMethTest %>%
-  mutate(TestE = map_dbl(Test, ~.x$TExp)) %>% 
-  pull(TestE) 
-hist(TTest.E,100)
-
-TTest.M <- ExpMethTest %>%
-  mutate(TestM = map(Test, ~.x$TMeth)) %>% 
-  select(TestM) %>%
-  unnest %>% 
-  pull
-hist(TTest.M,100)
+ExpMeth3.5 <- ExpMeth %>% 
+  mutate(NbProbes = purrr::map(Meth,nrow)) %>% 
+  filter(NbProbes >=3, NbProbes <=5) %>% 
+  mutate(Test = map2(Exp,Meth,TtestWelchAndBeta))
+saveRDS(ExpMeth3.5, paste0(DataRep,'ExpMeth_WelchAndBeta.rds'))
 
 
-
-SgnM <- (TTest.M>0) - (TTest.M<0)
-ModTTestM <- sqrt(abs(TTest.M))*SgnM
-hist(ModTTestM,100)
+        #### Garbage
 
 
+# ## Have a look at the number of probes per gene
+# TidyMeth %>% 
+#   mutate(NbProbesPerGene = map_int(Meth,nrow)) %>% 
+#   summarise_at(.vars = c('NbProbesPerGene'), .funs = c('min','mean','median','max'))
+# 
+# 
+# ## Focus on a gene
+# NbProbe = 9
+# Example <- TidyMeth %>% 
+#   mutate(NbProbesPerGene = map_int(Meth,nrow)) %>% 
+#   filter(NbProbesPerGene == NbProbe) %>% 
+#   slice(2:2)
+# 
+# Example <- TidyMeth %>% 
+#   filter(Gene == 'CASP8') 
+# 
+# 
+# DF <- t(Example$Meth[[1]])[,1:20]
+# Y <- log(1+Expression[Example$Gene,])
+# x11()
+# par(mfrow=c(ceiling(sqrt(ncol(DF))),round(sqrt(ncol(DF)))))
+# for (ii in 1:ncol(DF)){
+#   plot(DF[,ii],Y, main = paste("Probe",ii),col=as.factor(Labels))
+# }
 
 
-
-
-Summary <- ExpMeth %>% 
-  select(Gene,Test) %>% 
-  unnest %>% 
-  arrange(Test) %>% 
-  filter(abs(Test) > 100)
-
-Example <- TidyMeth %>% 
-  filter(Gene == 'PARP12') # LRP3
-
-DF <- t(Example$Meth[[1]])[,1:min(20,nrow(Example$Meth[[1]]))]
-Y <- log(Expression[Example$Gene,])
-x11()
-par(mfrow=c(ceiling(sqrt(ncol(DF))),round(sqrt(ncol(DF)))))
-for (ii in 1:ncol(DF)){
-  plot(DF[,ii],Y, main = paste("Probe",ii),col=as.factor(Labels))
-}
-
-Ydiff <- Y[seq(1,80,2)]-Y[seq(2,80,2)]
-DFdiff <- DF[seq(1,80,2),]-DF[seq(2,80,2),]
-plot(DFdiff[,ii],Ydiff, main = paste("Probe",ii),pch=16)
+# Summary <- ExpMeth %>% 
+#   select(Gene,Test) %>% 
+#   unnest %>% 
+#   arrange(Test) %>% 
+#   filter(abs(Test) > 100)
+# 
+# Example <- TidyMeth %>% 
+#   filter(Gene == 'PARP12') # LRP3
+# 
+# DF <- t(Example$Meth[[1]])[,1:min(20,nrow(Example$Meth[[1]]))]
+# Y <- log(Expression[Example$Gene,])
+# x11()
+# par(mfrow=c(ceiling(sqrt(ncol(DF))),round(sqrt(ncol(DF)))))
+# for (ii in 1:ncol(DF)){
+#   plot(DF[,ii],Y, main = paste("Probe",ii),col=as.factor(Labels))
+# }
+# 
+# Ydiff <- Y[seq(1,80,2)]-Y[seq(2,80,2)]
+# DFdiff <- DF[seq(1,80,2),]-DF[seq(2,80,2),]
+# plot(DFdiff[,ii],Ydiff, main = paste("Probe",ii),pch=16)
