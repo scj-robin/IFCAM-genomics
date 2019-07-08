@@ -36,7 +36,7 @@ F_KerFdr <- function(P, plotting=F){
       f = f / sum(tau)
       if(iter%%10==0){
          if(plotting){
-            plot(X[Xorder], (1-p0)*f[Xorder], type='l', xlab='', ylab='', main=iter);
+            plot(X[Xorder], (1-p0)*f[Xorder], type='l', xlab='', ylab='', main=iter, col=2);
             lines(X[Xorder], p0*phi0[Xorder], col=4)
          }
          cat(iter, '(', diff, ') ')
@@ -56,6 +56,6 @@ F_KerFdr <- function(P, plotting=F){
    # tau = tauSort[Xrank]
    if(plotting){plot(X, tau)}
    
-   return(list(p0=p0, f1=f, tau=tau))
+   return(list(X=X, p0=p0, f1=f, tau=tau))
 }
 
