@@ -2,13 +2,15 @@ rm(list=ls())
 library(KernSmooth)
 library(mclust)
 #library(Matrix)
-source('D:/IFCAM/IFCAM-genomics/Programs/Integration/Functions/F_KerFdr.R')
+# source('D:/IFCAM/IFCAM-genomics/Programs/Integration/Functions/F_KerFdr.R')
+source('Functions/F_KerFdr.R')
 
 
         #### Parameters
 
 
-DataRep <- 'D:/IFCAM/IFCAM-genomics/Data/PrivateIntegration/'
+# DataRep <- 'D:/IFCAM/IFCAM-genomics/Data/PrivateIntegration/'
+DataRep <- '../../Data/PrivateIntegration/'
 TypeOfTest <-  'Welch'  #  'Wilcoxon' " 'Student' # 
 
 

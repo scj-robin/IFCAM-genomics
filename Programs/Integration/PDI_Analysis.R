@@ -1,11 +1,12 @@
 rm(list=ls())
-library(betareg)
-
+library(betareg); library(tidyverse); 
+# library(purrr); 
 
         #### Parameters
 
 
-DataRep <- 'D:/IFCAM/IFCAM-genomics/Data/PrivateIntegration/'
+# DataRep <- 'D:/IFCAM/IFCAM-genomics/Data/PrivateIntegration/'
+DataRep <- '../../Data/PrivateIntegration/'
 TypeOfTest <-  'Welch'  #  'Wilcoxon' " 'Student' # 
 
 
@@ -107,9 +108,9 @@ TidyMeth <- Methylation %>%
 
 ## Get a tidy Expression dataset
 TidyExp <- Expression %>% 
-  as.tibble %>% 
-  rownames_to_column('Gene') %>% 
-  nest(-Gene) %>% 
+   rownames_to_column('Gene') %>% 
+   as.tibble %>% 
+   nest(-Gene) %>% 
   rename(Exp=data) %>% 
   mutate(Exp = purrr::map(Exp, ~ as.data.frame(.x) %>% as.numeric),
          LogExp = purrr::map(Exp,log))
