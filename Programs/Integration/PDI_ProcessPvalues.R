@@ -74,3 +74,5 @@ lines(Dens,col=2)
 Normal <- curve(dnorm,from=-5,to=10,new=FALSE)
 lines(Normal$x, Normal$y*Area,col=4)
 
+
+      #### Write the loops to perfom parallel computation according to Test/EmpiricalPvalues.R
