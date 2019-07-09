@@ -1,18 +1,25 @@
+## The goal here is to build a tibble combining for each gene the methylation 
+## and expression data, along with the pvalues of the tests that are performed 
+## on each type of data. The resulting tibble is ExpMeth (or ExpMeth3.5 if only
+## a subsample of the complete data set is wanted) that is store in a .rds format.
+
 rm(list=ls())
-library(betareg); library(tidyverse); 
-# library(purrr); 
+library(betareg); 
+library(tidyverse); 
+
 
         #### Parameters
 
 
-# DataRep <- 'D:/IFCAM/IFCAM-genomics/Data/PrivateIntegration/'
-DataRep <- '../../Data/PrivateIntegration/'
+DataRep <- 'D:/IFCAM/IFCAM-genomics/Data/PrivateIntegration/'
+#DataRep <- '../../Data/PrivateIntegration/'
 TypeOfTest <-  'Welch'  #  'Wilcoxon' " 'Student' # 
 
 
         #### Functions
 
 
+## Corresponds mostly to initial attemps, should be obsolete now
 TtestFunction <- function(x,y){
   
   ## Check x for -Inf
@@ -38,7 +45,8 @@ TtestFunction <- function(x,y){
   return(Res)
 }
 
-
+## Corresponds to the function that performs a Welch unpaired T-test for expression,
+## and a beta-regression test for methylation.
 TtestWelchAndBeta <- function(x,y){
   
   ## Check x for -Inf
@@ -75,6 +83,8 @@ Labels <- purrr::map(colnames(Expression), ~ substr(.x,nchar(.x),nchar(.x))) %>%
         #### Filter expression
 
 
+## Check for each class (T and N) whether there is some expression or not.
+## If not, the gene will be removed later.
 MaxForT <- apply(Expression[,Labels=='T'],1,max) 
 table(MaxForT==0)
 NonExpT <- names(MaxForT)[MaxForT==0]
@@ -100,11 +110,14 @@ GeneDF <- GeneInfo %>%
 
 ## Get a tidy Methylation dataset
 TidyMeth <- Methylation %>% 
+  merge(MethylationInfo,.,by="row.names") %>% 
+  rename(ProbeName = Row.names) %>% 
   as.tibble %>% 
-  mutate(Gene = MethylationInfo$Gene) %>% 
   nest(-Gene) %>% 
-  rename(Meth=data) %>% 
-  mutate(Meth = purrr::map(Meth, as.data.frame))
+  mutate(Meth = purrr::map(data, ~ .x[,3:ncol(.x)] %>% as.data.frame),
+         ProbeInfo = purrr::map(data, ~ .x[,1:2] %>% as.data.frame)
+         ) %>% 
+  select(-data)
 
 ## Get a tidy Expression dataset
 TidyExp <- Expression %>% 
@@ -127,10 +140,12 @@ ExpMeth
         #### Perform analysis
 
 
+## Complete datasets
 # ExpMethTest <- ExpMeth %>% 
 #   mutate(Test = map2(Exp,Meth,TtestWelchAndBeta))
 # saveRDS(ExpMethTest, paste0(DataRep,'ExpMeth_',TypeOfTest,'.rds'))
 
+## Only genes with 3 to 5 associated methylation probes
 ExpMeth3.5 <- ExpMeth %>% 
   mutate(NbProbes = purrr::map(Meth,nrow)) %>% 
   filter(NbProbes >=3, NbProbes <=5) %>% 
@@ -138,52 +153,4 @@ ExpMeth3.5 <- ExpMeth %>%
 saveRDS(ExpMeth3.5, paste0(DataRep,'ExpMeth_WelchAndBeta.rds'))
 
 
-        #### Garbage
-
-
-# ## Have a look at the number of probes per gene
-# TidyMeth %>% 
-#   mutate(NbProbesPerGene = map_int(Meth,nrow)) %>% 
-#   summarise_at(.vars = c('NbProbesPerGene'), .funs = c('min','mean','median','max'))
-# 
-# 
-# ## Focus on a gene
-# NbProbe = 9
-# Example <- TidyMeth %>% 
-#   mutate(NbProbesPerGene = map_int(Meth,nrow)) %>% 
-#   filter(NbProbesPerGene == NbProbe) %>% 
-#   slice(2:2)
-# 
-# Example <- TidyMeth %>% 
-#   filter(Gene == 'CASP8') 
-# 
-# 
-# DF <- t(Example$Meth[[1]])[,1:20]
-# Y <- log(1+Expression[Example$Gene,])
-# x11()
-# par(mfrow=c(ceiling(sqrt(ncol(DF))),round(sqrt(ncol(DF)))))
-# for (ii in 1:ncol(DF)){
-#   plot(DF[,ii],Y, main = paste("Probe",ii),col=as.factor(Labels))
-# }
-
-
-# Summary <- ExpMeth %>% 
-#   select(Gene,Test) %>% 
-#   unnest %>% 
-#   arrange(Test) %>% 
-#   filter(abs(Test) > 100)
-# 
-# Example <- TidyMeth %>% 
-#   filter(Gene == 'PARP12') # LRP3
-# 
-# DF <- t(Example$Meth[[1]])[,1:min(20,nrow(Example$Meth[[1]]))]
-# Y <- log(Expression[Example$Gene,])
-# x11()
-# par(mfrow=c(ceiling(sqrt(ncol(DF))),round(sqrt(ncol(DF)))))
-# for (ii in 1:ncol(DF)){
-#   plot(DF[,ii],Y, main = paste("Probe",ii),col=as.factor(Labels))
-# }
-# 
-# Ydiff <- Y[seq(1,80,2)]-Y[seq(2,80,2)]
-# DFdiff <- DF[seq(1,80,2),]-DF[seq(2,80,2),]
-# plot(DFdiff[,ii],Ydiff, main = paste("Probe",ii),pch=16)
+ 
