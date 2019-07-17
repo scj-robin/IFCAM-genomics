@@ -109,6 +109,20 @@ $$
 P_{k\ell} = B^{-1} \sum_b \Ibb\{t(\Tt^E_{k_b}, \Tt^M_{k_b\ell_b}) \geq T_{k\ell}\}.
 $$
 
+\paragraph{Improving the sampling.} Steps $(b)$ and $(c)$ are somewhat inefficient to estimate  the tail probability as they mostly sample in the center of the null distribution. To improve the efficiency, we may define a weight $\omega_{k\ell}$, being an increasing function of $t(\Tt^E_k, \Tt^M_{k\ell})$, such as
+$$
+\omega_{k\ell} = \text{rank}(t(\Tt^E_k, \Tt^M_{k\ell}))
+$$
+and revise the steps as
+\begin{description}
+ \item[Step $(b')$:] Sample $B$ pairs $(k_b, \ell_b)$ with respective probabilities $\omega_{k\ell} \tau_{k\ell}$.
+ \item[Step $(c')$:] Etimate the p-value as
+ $$
+ P_{k\ell} = \sum_b \omega_{k\ell}^{-1} \Ibb\{t(\Tt^E_{k_b}, \Tt^M_{k_b\ell_b}) \geq T_{k\ell}\} \left/ \sum_b \omega_{k\ell}^{-1} \right.
+ $$
+\end{description}
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Remarks}
 

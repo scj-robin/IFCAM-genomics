@@ -60,7 +60,7 @@ DataForSampling <- Tests %>%
   unnest %>% 
   mutate(Tau.M = GetH1.M$tau,
          Tau.H0.joint = 1-(Tau.E*Tau.M))
-Stephane <- DataForSampling %>% as.data.frame
+FrameForSampling <- DataForSampling %>% as.data.frame
 
 
         #### Perform sampling and plot the results
@@ -89,23 +89,29 @@ lines(Absc, Normal,col=4,new=FALSE, lwd=2)
 # Use the function Functions/F_EmpPvalues.R only for B <= 1e8
 # For B > 1e8, use the follogin loop
 
-NbDraws = 1e6; BlockSize = 1e5; # BlockSize <= 1e7
+NbDraws = 1e8; BlockSize = 1e6; # BlockSize <= 1e7
 NbBlock = round(NbDraws/BlockSize)
-ObservedStat = Stephane$MinStat; NbStat = length(ObservedStat)
+ObservedStat = FrameForSampling$MinStat; NbStat = length(ObservedStat)
 rankObservedStat = length(ObservedStat) - rank(ObservedStat) + 1
 sortObservedStat = sort(ObservedStat, decreasing=T)
+# Additional weighting to favor sampling of large values
+# -> to be accounted for when computing the p-values
+TailWeight = rank(FrameForSampling$MinStat); 
+# TailWeight = rep(1, nrow(FrameForSampling))
 Pval = rep(0, NbStat)
 sapply(1:NbBlock, function(b){
    cat(b, ': ')
-   S0 = sample(1:nrow(DataForSampling), replace=T, 
-                prob = DataForSampling$Tau.H0.joint, size=BlockSize)
-   X0 = DataForSampling$MinStat[S0]
-   Pval <<- Pval + F_EmpPvalues(sortObservedStat, X0)
-   # H = hist(sortObservedStat, breaks=sqrt(NbStat))
-   # lines(sortObservedStat, max(H$counts)/2*Pval/b, type='l', lwd=2, col=2)
+   S0 = sample(1:nrow(FrameForSampling), replace=T, 
+                prob = FrameForSampling$Tau.H0.joint * TailWeight, size=BlockSize)
+   Pval <<- Pval + F_EmpPvalues(sortObservedStat, X0=FrameForSampling$MinStat[S0], W0=1/TailWeight[S0])
    plot(sortObservedStat, Pval/b, type='l', lwd=2, col=2, log='y')
 })
 Pval = Pval[rankObservedStat] / NbBlock
+FrameForSampling$PvalMinStat = Pval
 
-H = hist(ObservedStat, breaks=sqrt(NbStat))
-points(ObservedStat, max(H$counts)/2*Pval/b, pch=20, lwd=2, col=2)
+H = hist(ObservedStat, breaks=sqrt(NbStat), freq=F)
+lines(Dens, col=4, lwd=2)
+lines(Dens$x, mean(FrameForSampling$Tau.H0.joint)*dnorm(Dens$x), col=5, lwd=2, lty=2)
+lines(sortObservedStat, Pval[order(ObservedStat, decreasing=T)], 
+      pch=20, lwd=2, col=2)
+lines(Dens$x, pnorm(Dens$x, lower.tail=F), col=6, lwd=2, lty=2)

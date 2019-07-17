@@ -11,8 +11,8 @@ library(tidyverse);
         #### Parameters
 
 
-DataRep <- 'D:/IFCAM/IFCAM-genomics/Data/PrivateIntegration/'
-#DataRep <- '../../Data/PrivateIntegration/'
+# DataRep <- 'D:/IFCAM/IFCAM-genomics/Data/PrivateIntegration/'
+DataRep <- '../../Data/PrivateIntegration/'
 TypeOfTest <-  'Welch'  #  'Wilcoxon' " 'Student' # 
 
 
@@ -151,6 +151,3 @@ ExpMeth3.5 <- ExpMeth %>%
   filter(NbProbes >=3, NbProbes <=5) %>% 
   mutate(Test = map2(Exp,Meth,TtestWelchAndBeta))
 saveRDS(ExpMeth3.5, paste0(DataRep,'ExpMeth_WelchAndBeta.rds'))
-
-
- 

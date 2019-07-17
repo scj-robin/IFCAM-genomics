@@ -12,7 +12,8 @@ library(data.table)
         #### Parameters
 
 
-DataRep <- 'D:/IFCAM/IFCAM-genomics/Data/PrivateIntegration/'
+# DataRep <- 'D:/IFCAM/IFCAM-genomics/Data/PrivateIntegration/'
+DataRep <- '../../Data/PrivateIntegration/'
 MutationFileName <- 'Mutation.txt'
 MethylationFileName <- "Methylation.txt"
 ExpressionFileName <- "fpkm_values_all_genes_from_40_patients_for_ISI_single_entry_JUNE.txt"
