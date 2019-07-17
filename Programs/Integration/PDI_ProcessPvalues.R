@@ -10,15 +10,16 @@ library(tidyverse)
 library(KernSmooth)
 library(mclust)
 #library(Matrix)
-source('D:/IFCAM/IFCAM-genomics/Programs/Integration/Functions/F_KerFdr.R')
-#source('Functions/F_KerFdr.R')
+# source('D:/IFCAM/IFCAM-genomics/Programs/Integration/Functions/F_KerFdr.R')
+source('Functions/F_KerFdr.R')
+source('Functions/F_EmpPvalues.R')
 
 
         #### Parameters
 
 
-DataRep <- 'D:/IFCAM/IFCAM-genomics/Data/PrivateIntegration/'
-#DataRep <- '../../Data/PrivateIntegration/'
+# DataRep <- 'D:/IFCAM/IFCAM-genomics/Data/PrivateIntegration/'
+DataRep <- '../../Data/PrivateIntegration/'
 TypeOfTest <-  'Welch'  #  'Wilcoxon' " 'Student' # 
 
 
@@ -76,12 +77,35 @@ Dens$y <- Dens$y*Area
 
 par(mfrow=c(1,1))
 hist(DataForSampling$MinStat,freq = FALSE,100)
-lines(Dens,col=2)
+lines(Dens, col=2, lwd=2)
 
 ## In case one does want to add the N(0,1)
 Absc <- seq(-5,10,length.out = 1000)
 Normal <- dnorm(Absc)*Area
-lines(Absc, Normal,col=4,new=FALSE)
+lines(Absc, Normal,col=4,new=FALSE, lwd=2)
 
 
-      #### Write the loops to perfom parallel computation according to Test/EmpiricalPvalues.R
+      #### Computing the p-values
+# Use the function Functions/F_EmpPvalues.R only for B <= 1e8
+# For B > 1e8, use the follogin loop
+
+NbDraws = 1e6; BlockSize = 1e5; # BlockSize <= 1e7
+NbBlock = round(NbDraws/BlockSize)
+ObservedStat = Stephane$MinStat; NbStat = length(ObservedStat)
+rankObservedStat = length(ObservedStat) - rank(ObservedStat) + 1
+sortObservedStat = sort(ObservedStat, decreasing=T)
+Pval = rep(0, NbStat)
+sapply(1:NbBlock, function(b){
+   cat(b, ': ')
+   S0 = sample(1:nrow(DataForSampling), replace=T, 
+                prob = DataForSampling$Tau.H0.joint, size=BlockSize)
+   X0 = DataForSampling$MinStat[S0]
+   Pval <<- Pval + F_EmpPvalues(sortObservedStat, X0)
+   # H = hist(sortObservedStat, breaks=sqrt(NbStat))
+   # lines(sortObservedStat, max(H$counts)/2*Pval/b, type='l', lwd=2, col=2)
+   plot(sortObservedStat, Pval/b, type='l', lwd=2, col=2, log='y')
+})
+Pval = Pval[rankObservedStat] / NbBlock
+
+H = hist(ObservedStat, breaks=sqrt(NbStat))
+points(ObservedStat, max(H$counts)/2*Pval/b, pch=20, lwd=2, col=2)
