@@ -115,3 +115,5 @@ lines(Dens$x, mean(FrameForSampling$Tau.H0.joint)*dnorm(Dens$x), col=5, lwd=2, l
 lines(sortObservedStat, Pval[order(ObservedStat, decreasing=T)], 
       pch=20, lwd=2, col=2)
 lines(Dens$x, pnorm(Dens$x, lower.tail=F), col=6, lwd=2, lty=2)
+
+saveRDS(FrameForSampling,paste(DataRep,'CombinedPvalues.rds'))
