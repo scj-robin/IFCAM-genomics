@@ -36,26 +36,25 @@
 
 \paragraph{Notations.}
 \begin{itemize}
- \item $i = 1 ... n$ cells
- \item $j = 1 ... p$ genes
- \item $Y_{ij} =$ log-expression
- \item $K$ groups
- \item $Z_i =$ cell membership
- expression
+ \item $i = 1 ... n \simeq 1000$ cells, 
+ \item $j = 1 ... p \simeq 20000$ genes, 
+ \item $Y_{ij} =$ log-expression,
+ \item $K$ groups of cells,
+ \item $Z_i \in \{1, \dots, K\} =$ cell membership expression.
 \end{itemize}
 
 \paragraph{Mixture model.}
 \begin{align*}
  Z_i & \sim \Mcal(1; \pi) \\
- Y_{ij} \mid Z_i & \sim \Ncal(\mu + \alpha_i + \beta_j + \gamma_{kj}, \sigma_k^2)
+ Y_{ij} \mid Z_i = k & \sim \Ncal(\mu + \alpha_i + \beta_j + \gamma_{kj}, \sigma_k^2)
 \end{align*}
-+ $\gamma_{kj}$ blockwise constant
+where $\gamma_{kj}$ is blockwise constant along the locations of the genes: proxy for the mean genome copy number at the location of gene $j$ in clster $k$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Inference via fused-lasso}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\paragraph{Penalized Likelihood.}
+\paragraph{Penalizedlikelihood.}
 We aim at maximizing
 $$
 \log p_\theta(Y) - n \lambda \sum_k \pi_k \sum_{j\geq 2} |\gamma_{k,j} - \gamma_{k, j-1}|,
@@ -85,22 +84,27 @@ where
 \end{itemize}
 This optimization can be carried, for each $k$ using, e.g., {\tt glmnet}, but $\Yc$ is $np \times 1$ and $\Xc$ is $np \times (n+p)$...
 
+\paragraph{Remarks}
+\begin{itemize}
+ \item How to tune $\lambda$ ? How does it combine with EM?
+\end{itemize}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Inference via dynamic programming}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\paragraph{Penalized Likelihood.}
+\paragraph{Penalized likelihood.}
 We aim at maximizing
 $$
-\log p_\theta(Y) - \text{pen}(t_{kq}),
+\log p_\theta(Y) - \text{pen}(\{t_{kq}\}),
 $$
 where $t_{kq}$ is the $q$th change-point in group $k$, which amounts at maximizing
 \begin{align*}
- & \Esp \left(\log p_\theta(Y, Z)  \mid Y\right) - \text{pen}(t_{kq}).
+ & \Esp \left(\log p_\theta(Y, Z)  \mid Y\right) - \text{pen}(\{t_{kq}\}).
 \end{align*}
-Remind that the Zhang \& Siegmund penalty can be combined withthe segments cost.
+Remind that the Zhang \& Siegmund penalty can be combined with the segments cost.
 
-\paragraph{Estimating the $\gamma_{kj}$} to be done.
+\paragraph{Estimating the $\gamma_{kj}$.} To be done.
 
 \end{document}
