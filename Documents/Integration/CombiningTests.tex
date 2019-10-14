@@ -100,7 +100,7 @@ T_{k\ell} = t(\Tt^E_k, \Tt^M_{k\ell})
 $$
 e.g.
 $$
-t(\Tt^E_k, \Tt^M_{k\ell}) = \Tt^E_k \Tt^M_{k\ell}
+t(\Tt^E_k, \Tt^M_{k\ell}) = | \Tt^E_k \Tt^M_{k\ell} |
 \qquad \text{or} \qquad
 t(\Tt^E_k, \Tt^M_{k\ell}) = \min(\Tt^E_k, \Tt^M_{k\ell}).
 $$
@@ -108,6 +108,20 @@ we define the p-value
 $$
 P_{k\ell} = B^{-1} \sum_b \Ibb\{t(\Tt^E_{k_b}, \Tt^M_{k_b\ell_b}) \geq T_{k\ell}\}.
 $$
+
+\paragraph{Improving the sampling.} Steps $(b)$ and $(c)$ are somewhat inefficient to estimate  the tail probability as they mostly sample in the center of the null distribution. To improve the efficiency, we may define a weight $\omega_{k\ell}$, being an increasing function of $t(\Tt^E_k, \Tt^M_{k\ell})$, such as
+$$
+\omega_{k\ell} = \text{rank}(t(\Tt^E_k, \Tt^M_{k\ell}))
+$$
+and revise the steps as
+\begin{description}
+ \item[Step $(b')$:] Sample $B$ pairs $(k_b, \ell_b)$ with respective probabilities $\omega_{k\ell} \tau_{k\ell}$.
+ \item[Step $(c')$:] Etimate the p-value as
+ $$
+ P_{k\ell} = \sum_b \omega_{k\ell}^{-1} \Ibb\{t(\Tt^E_{k_b}, \Tt^M_{k_b\ell_b}) \geq T_{k\ell}\} \left/ \sum_b \omega_{k\ell}^{-1} \right.
+ $$
+\end{description}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Remarks}
@@ -121,7 +135,7 @@ $$
 
 \paragraph{Cons.} 
 \begin{enumerate}
- \item It is not clear if the procedure is a genuine test procedure, beacause of the non-standard for of '$H_0$'.
+ \item It is not clear if the procedure is a genuine test procedure, because of the non-standard for of '$H_0$'.
  \item The procedure strongly relies on the estimates of $F^E_1$ and $F^M_1$.
  \item The definition of the probability $\tau_{k\ell}$ relies on an implicit independence assumption, which does not necessarily make sense for out purpose.
 \end{enumerate}
