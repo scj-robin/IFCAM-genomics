@@ -92,7 +92,7 @@ Test statistics $\Tt^M_{k\ell}$, estimates of $\pi^M_0$ and $F^M_1$ and conditio
 $$
 \tau_{k\ell} = \tau^E_k \tau^M_{k\ell} \simeq \Pr\left\{H_{1k\ell} \mid \Tt^E_k,  \Tt^M_{k\ell}\right\}
 $$
-and sample $B$ pairs $(k_b, \ell_b)$ among all pairs $(k, \ell)$ with replacement with probabilities $\tau_{k\ell}$. 
+and sample $B$ pairs $(k_b, \ell_b)$ among all pairs $(k, \ell)$ with replacement with probabilities $1 - \tau_{k_b\ell_b}$, as we want to sample under $H_{0k\ell} = H^E_{0k} \cup H^M_{0k\ell}$. 
 
 \paragraph{Step $(c)$: p-value.} For a given joint statistic 
 $$
