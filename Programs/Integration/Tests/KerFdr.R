@@ -2,24 +2,35 @@
 
 rm(list=ls())
 library(KernSmooth); library(mclust); library(Matrix)
+source('Functions/F_KerFdr.R')
+DataDir = ("/home/robin/Bureau/RECHERCHE/EXPRESSION/IFCAM/Data-NotUpload/")
 
-# # Parms
-# n = 1e5; pi0 = .9; pi1 = 1-pi0
+# load(paste0(DataDir, 'TTests-LogExp.Rdata')) 
+# KFE = F_KerFdr(PE, plotting=F)
+# save(PE, KFE, file=paste0(DataDir, 'TTests-LogExp-KerFdr.Rdata')) 
+load(paste0(DataDir, 'TTests-LogExp-KerFdr.Rdata'))
 
-# # Data
-# Z = rbinom(n, 1, pi1)
-# X = rep(0, n)
-# X[which(Z==0)] = rnorm(sum(Z==0))
-# X[which(Z==1)] = rgamma(sum(Z==1), 2, 1)
-# X = sort(X)
-# f.true = dgamma(X, 2, 1)
-# P = pnorm(X, lower.tail=F)
+# load(paste0(DataDir, 'BetaRegTests-Methylation.Rdata'))
+# PM = PM[-which(PM==0)]; KFM = F_KerFdr(PM, plotting=F)
+# save(PM, KFM, file=paste0(DataDir, 'BetaRegTests-Methylation-KerFdr.Rdata')) 
+load(paste0(DataDir, 'BetaRegTests-Methylation-KerFdr.Rdata'))
 
-load('../../../Data-NotUpload/TTests-LogExp.Rdata'); 
-P = PE; 
-load('../../../Data-NotUpload/BetaRegTests-Methylation.Rdata'); 
-PM = PM[-which(PM==0)]; P = PM; 
+# Observed stat products
+LogExp = readRDS(paste0(DataDir, "LogExp.rds"))
+MethInfo = readRDS(paste0(DataDir, "MethInfo.rds"))
+XE = KFE$X; XM = KFM$X
+CpGlist = ProdStat = ProdProb = list()
+sapply(1:length(rownames(LogExp)), function(i){
+   if(i%%100==0){cat(i, '')}
+   CpGlist[[i]] <<- which(MethInfo$Gene==rownames(LogExp))
+   CpGlist[[i]] <<- CpGlist[[i]][-which(CpGlist[[i]] > length(PM))]
+   ProdStat[[i]] <<- XE[i]%*%XM[CpGlist[[i]]]
+   ProdProb[[i]] <<- KFE$tau[i]%*%KFM$tau[CpGlist[[i]]]
+})
 
-source('F_KerFdr.R')
-F_KerFdr(P)
+# Null for the joint test stat
+B = 1e4
+XEsample = sample(1:length(PE), size=B, prob=1-KFE$tau, replace=T)
+XMsample = sample(1:length(PM), size=B, prob=1-KFM$tau, replace=T)
+hist(XEsample*XMsample)
 

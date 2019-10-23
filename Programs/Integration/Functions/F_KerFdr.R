@@ -1,4 +1,9 @@
-F_KerFdr <- function(P, plotting=F){
+F_KerFdr <- function(P, plotting=F, rescaleKernWidth=FALSE){
+   # Fits a non parametric mixture for p-values
+   # First estimate pi0
+   # Then use probit transform X = -qnorm(P)
+   # Then fit a mixture pi0 N(0, 1) + (1- pi0) F, 
+   # to get a kernel estimate of the density f of distribution F
    library(KernSmooth); library(mclust); 
    
    if(plotting){par(mfrow=c(4, 4), mex=.6, pch=20)}
@@ -13,8 +18,10 @@ F_KerFdr <- function(P, plotting=F){
    # Choice of w + Gram matrix : Gaussian kernel (small n)
    # w = dpik(X); G = exp(-as.matrix(dist(X, diag=T)^2)/2/w^2)/w/sqrt(2*pi)
    
-   # Choice of w + Gram matrix : histogramm  (large n)
-   h = dpih(X); h.inv = 1/h
+   # Choice of w + Gram matrix : rectangular kernel  (large n)
+   h = dpih(X); 
+   if(rescaleKernWidth){h = h/sqrt(1-p0)}
+   h.inv = 1/h
    Xneighbors = list()
    invisible(sapply(1:n, function(i){Xneighbors[[i]] <<- which(abs(X-X[i])<=h/2)}))
    
@@ -36,8 +43,8 @@ F_KerFdr <- function(P, plotting=F){
       f = f / sum(tau)
       if(iter%%10==0){
          if(plotting){
-            plot(X[Xorder], (1-p0)*f[Xorder], type='l', xlab='', ylab='', main=iter, col=2);
-            lines(X[Xorder], p0*phi0[Xorder], col=4)
+            plot(X[Xorder], p0*phi0[Xorder], col=4, type='l', xlab='', ylab='', main=iter, xlim=c(min(X), max(X)));
+            lines(X[Xorder], (1-p0)*f[Xorder], col=2)
          }
          cat(iter, '(', diff, ') ')
       }

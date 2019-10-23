@@ -16,6 +16,7 @@ X0 = rnorm(B); X = rgamma(n, 1, 1)
 # F0 = ecdf(X0); Pval = 1 - F0(X)
 
 # Sorting : OK for B = 1e8, n = 1e6 but R cannot create a vector of length 1e9
+# Indranil: split the 1e9 or 1e10 nulls into blocks of 1e8 and combine afterward
 X0 = sort(X0, decreasing=TRUE)
 Xorder = order(X, decreasing=TRUE); Xrank = n-rank(X)+1;
 X = sort(X, decreasing=TRUE)

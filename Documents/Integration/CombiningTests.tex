@@ -116,11 +116,19 @@ $$
 and revise the steps as
 \begin{description}
  \item[Step $(b')$:] Sample $B$ pairs $(k_b, \ell_b)$ with respective probabilities $\omega_{k\ell} \tau_{k\ell}$.
- \item[Step $(c')$:] Etimate the p-value as
+ \item[Step $(c')$:] Estimate the p-value as
  $$
  P_{k\ell} = \sum_b \omega_{k\ell}^{-1} \Ibb\{t(\Tt^E_{k_b}, \Tt^M_{k_b\ell_b}) \geq T_{k\ell}\} \left/ \sum_b \omega_{k\ell}^{-1} \right.
  $$
 \end{description}
+
+\paragraph{Tristan's remark.} If all pairs $(k, \ell)$ were resampled, the procedure described in step ($a$), ($b$) and ($c$) would simply yield
+$$
+P_{k\ell} 
+= \sum_{(k', \ell')} (1-\tau_{k'\ell'}) \Ibb\{t(\Tt^E_{k'}, \Tt^M_{k'\ell'}) \geq T_{k\ell}\}
+\left/ \sum_{(k', \ell')} (1-\tau_{k'\ell'}) \right.
+$$
+which can be computed straightforwardly from the observed data by simply sorting the observed $T_{k\ell}$.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
