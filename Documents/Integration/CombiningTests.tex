@@ -18,7 +18,12 @@
 \newcommand{\cst}{\text{cst}}
 \newcommand{\Esp}{\mathbb{E}}
 \newcommand{\Ibb}{\mathbb{I}}
+\newcommand{\Hcal}{\mathcal{H}}
 \newcommand{\Ncal}{\mathcal{N}}
+\newcommand{\Pcal}{\mathcal{P}}
+\newcommand{\Tcal}{\mathcal{T}}
+\newcommand{\Ucal}{\mathcal{U}}
+\newcommand{\Zcal}{\mathcal{Z}}
 \newcommand{\Dx}{\Delta x}
 \newcommand{\Tt}{\widetilde{T}}
 \newcommand{\xb}{\overline{x}}
@@ -147,6 +152,114 @@ which can be computed straightforwardly from the observed data by simply sorting
  \item The procedure strongly relies on the estimates of $F^E_1$ and $F^M_1$.
  \item The definition of the probability $\tau_{k\ell}$ relies on an implicit independence assumption, which does not necessarily make sense for out purpose.
 \end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Alternative formulation of the problem}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Definitions.}
+\begin{itemize}
+ \item Let us consider $Q$ different types of measurements collected on a series of individuals ($i = 1 \dots n$) and a series of loci ($k = 1 \dots m$)
+ \item Let $Y^q_{ik}$ denote the response of type $q$ measured on individual $i$ at loci $k$.
+ \item Let us define the null hypothesis 
+ $$
+ H^q_{0k} = \{Y^q_{ik} \text{ has the same distribution in two subgroups of individuals}\}.
+ $$
+ \item Let $P^q_k$ denote the $p$-value associated with $H^q_{0k}$ and 
+ $$
+ \Tcal_k = (T^q_k)_{1 \leq q \leq Q}
+ $$
+ \item Let us define the union null hypothesis
+ $$
+ \Hcal_{0k} = \bigcup^Q_{q=1} H^q_{0k}.
+ $$
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Union-intersection test.} According to Lehmann, define 
+$$
+\Pcal_k = \max_q P^q_k.
+$$
+Enables to control FWER over $k$ via Bonferroni, but not FDR control as the distribution of $\Pcal_0$ under $\Hcal_0$ is unknown (because $\Hcal_0$ is composite).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Classification approach.} 
+Our aim is to estimate the union false discovery probability
+$$
+\tau_k = 1 - \Pr\{\Hcal_{0k} \mid \Tcal_k\}.
+$$
+To this aim, we assume that each $H^q_{0k}$ is simple so that the marginal distribution of $P^q_k$ under $H^q_{0k}$ is $\Ucal_{[0, 1]}$.
+% and one may evaluate the conditional probability
+% $$
+% \tau^q_k = 1 - \Pr\{H^q_{0k} \mid T^q_k\}.
+% $$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Classification model}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Following a local-FDR ($\ell FDR$) approach, we assume that, for each $q$, the $p$-values $\{P^q_k\}_{1 \leq k \leq m}$ are iid, each arising from the mixture model:
+\begin{equation} \label{eq:MixturePk}
+ P^q_k \sim \pi_0^q F^q_0 + (1-\pi_0^q) F^q_1.
+\end{equation}
+We further denote $f^q_0$ (resp. $f^q_1$) the density of $F^q_0$ (resp. $F^q_1$). Obviously $F^q_0 = \Ucal_{[0, 1]}$, so $f^q_0 \equiv f_0 \equiv 1$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Union null hypothesis.} 
+$\Hcal_{0k}$ includes $2^Q -1$ configurations. Let us define the binary variable
+$Z^q_k = 0$ if $H^q_{0k}$ holds and 1 otherwise. Let $\Zcal_k$ denote the configuration of loci $k$: $\Zcal_k = (Z^q_k)_{1 \leq q \leq Q}$. $\Hcal_{0k}$ includes all configurations except $\Zcal_k = (1, \dots 1)$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Joint conditional distribution of the $p$-values.} We assume that the marginal $p$-values arising from a null distribution are independent. So
+$$
+f_{\Zcal_k}(\Pcal_k) = \prod_{k: Z^q_k=0} f_0(P^q_k) \times f_{1;\Zcal_k}\left((P^q_k)_{q: Z^q_k=1}\right).
+$$
+In the special case where $Q=2$, we have
+\begin{align*}
+  f_{(0,0)}(\Pcal_k) & = \\
+  f_{(0,1)}(\Pcal_k) & = \\
+  f_{(1,0)}(\Pcal_k) & = 
+\end{align*}
+so the marginal distributions $f^1_1$ and $f^2_1$ are sufficient to fully define the distribution of $\Pcal_k$ under $\Hcal_{0k}$. \\
+In the case where $Q=3$, we have
+\begin{align*}
+  f_{(0,0,0)}(\Pcal_k) & = \\
+  f_{(0,0,1)}(\Pcal_k) & = \\
+  \dots 
+\end{align*}
+and the marginal distributions $f^q_1$ are not sufficient to define $f_{\Zcal_k}(\Pcal_k)$
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Marginal probability of a configuration.} We denote
+$$
+\rho(z) = \Pr\{\Zcal_k = z\}.
+$$
+A possible option is
+$$
+\rho(z) = \prod_q (\pi^q_0)^{1-z^q} (\pi^q_1)^{z^q}.
+$$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Inference}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Marginal mixture distributions.} For each $q$, we can fit the mixture model \eqref{eq:MixturePk} according to \cite{RBD07} to get estimates of $\pi^q_0$ and $f^q_1$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Sampling from the joint non-null distribution.} 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Last remarks.} 
+\begin{itemize}
+ \item Plus de calcul de $p$-value car classif
+ \item Pas d'autre idee que le produit des $\tau^q$ pour le poids dans l'estimation de $f_{1, \Zcal}$
+ \item Espoir de cal efficace en se reposant sur le tri des observations $k$ en fonction de la stat $\Pcal_k = \max_q P^q_k$.
+\end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bibliographystyle{plain}
