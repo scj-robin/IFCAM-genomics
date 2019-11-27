@@ -220,13 +220,9 @@ In the special case where $Q=2$, we have $\Pcal_k = (P^1_k, P^2_k)$ and
 \begin{align*}
   f_{(0,0)}(\Pcal_k) & = f_0(P^1_k) f_0(P^2_k) \\
   f_{(0,1)}(\Pcal_k) & = f_0(P^1_k) f_1(P^2_k) \\
-  f_{(1,0)}(\Pcal_k) & = f_1(P^1_k) f_0(P^2_k) 
-\end{align*}
-but
-$$
-f_{(1,1)}(\Pcal_k) = f_{11}(P^1_k, P^2_k)
-\qquad \text{(no restriction).}
-$$
+  f_{(1,0)}(\Pcal_k) & = f_1(P^1_k) f_0(P^2_k) \\
+  \text{but} \qquad f_{(1,1)}(\Pcal_k) & = f_{11}(P^1_k, P^2_k) & & \text{(no restriction).}
+\end{align*} 
 so the marginal distributions $f^1_1$ and $f^2_1$ are sufficient to fully define the distribution of $\Pcal_k$ under $\Hcal_{0k}$. \\
 In the case where $Q=3$, we have
 \begin{align*}
@@ -263,8 +259,30 @@ $$
 \begin{itemize}
  \item Plus de calcul de $p$-value car classif
  \item Pas d'autre idee que le produit des $\tau^q$ pour le poids dans l'estimation de $f_{1, \Zcal}$
- \item Espoir de cal efficace en se reposant sur le tri des observations $k$ en fonction de la stat $\Pcal_k = \max_q P^q_k$.
+ \item Espoir de calcul efficace en se reposant sur le tri des observations $k$ en fonction de la stat $\Pcal_k = \max_q P^q_k$.
 \end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{27 / 11 / 2019 : alternative union $p$-value.} 
+\begin{align*}
+	P(P_{\max} < p \mid H_0) 
+	& = \left(\pi_{00} P(P_{\max} < p \mid H_{00}) + \pi_{01} P(P_{\max} < p \mid H_{01}) + \pi_{10} P(P_{\max} < p \mid H_{10}) \right) / (1- \pi_{11}) \\
+	& = \left(
+	\pi_{00} P(P^1 < p \mid H^1_0) P(P^2 < p \mid H^2_0) 
+	+ \pi_{01} P(P^1 < p \mid H^1_0) P(P^2 < p \mid H^2_1) 
+	+ \pi_{10} P(P^1 < p \mid H^1_1) P(P^2 < p \mid H^2_0) 
+	\right) / (1- \pi_{11}) \\
+	& = \left(
+	\pi_{00} p^2 
+	+ \pi_{01} p F_1^2(p)
+	+ \pi_{10} p F_1^1(p)
+	\right) / (1- \pi_{11}) \\
+\end{align*}
+where $F_1^q$ can be estimated as
+$$
+\widehat{F}^q_1(p) = \frac{\sum_{i: P^q_i < p} \tau_i^q}{\#\{i: P^q_i < p\}}
+$$
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bibliographystyle{plain}

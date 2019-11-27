@@ -63,31 +63,31 @@ DataForSampling <- Tests %>%
 FrameForSampling <- DataForSampling %>% as.data.frame
 
 
-        #### Perform sampling and plot the results
-
-
-NbDraws = 1e8
-H0Sample <- sample(1:nrow(DataForSampling), replace = T, prob = DataForSampling$Tau.H0.joint,size = NbDraws)
-
-## Plot the actual and H0 distribution
-H0.MinStat <- DataForSampling$MinStat[H0Sample]
-Dens <- density(H0.MinStat)
-Area <- mean(DataForSampling$Tau.H0.joint) 
-Dens$y <- Dens$y*Area
-
-par(mfrow=c(1,1))
-hist(DataForSampling$MinStat,freq = FALSE,100)
-lines(Dens, col=2, lwd=2)
-
-## In case one does want to add the N(0,1)
-Absc <- seq(-5,10,length.out = 1000)
-Normal <- dnorm(Absc)*Area
-lines(Absc, Normal,col=4,new=FALSE, lwd=2)
+#         #### Perform sampling and plot the results
+# 
+# 
+# NbDraws = 1e8
+# H0Sample <- sample(1:nrow(DataForSampling), replace = T, prob = DataForSampling$Tau.H0.joint,size = NbDraws)
+# 
+# ## Plot the actual and H0 distribution
+# H0.MinStat <- DataForSampling$MinStat[H0Sample]
+# Dens <- density(H0.MinStat)
+# Area <- mean(DataForSampling$Tau.H0.joint) 
+# Dens$y <- Dens$y*Area
+# 
+# par(mfrow=c(1,1))
+# hist(DataForSampling$MinStat,freq = FALSE,100)
+# lines(Dens, col=2, lwd=2)
+# 
+# ## In case one does want to add the N(0,1)
+# Absc <- seq(-5,10,length.out = 1000)
+# Normal <- dnorm(Absc)*Area
+# lines(Absc, Normal,col=4,new=FALSE, lwd=2)
 
 
       #### Computing the p-values
 # Use the function Functions/F_EmpPvalues.R only for B <= 1e8
-# For B > 1e8, use the follogin loop
+# For B > 1e8, use the following loop
 
 NbDraws = 1e8; BlockSize = 1e6; # BlockSize <= 1e7
 NbBlock = round(NbDraws/BlockSize)

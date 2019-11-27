@@ -1,4 +1,4 @@
-F_KerFdr <- function(P, plotting=F, rescaleKernWidth=FALSE){
+F_KerFdr <- function(P, p0=NULL, plotting=F, rescaleKernWidth=FALSE){
    # Fits a non parametric mixture for p-values
    # First estimate pi0
    # Then use probit transform X = -qnorm(P)
@@ -13,7 +13,8 @@ F_KerFdr <- function(P, plotting=F, rescaleKernWidth=FALSE){
    if(plotting){hist(P, breaks=sqrt(n)); plot(sort(P), (1:n)/n); hist(X, breaks=sqrt(n))}
    
    # Estimate of pi0 and phi0
-   p0 = 2*sum((P > .5))/n; phi0 = dnorm(X)
+   if(is.null(p0)){p0 = 2*sum((P > .5))/n}
+   phi0 = dnorm(X)
 
    # Choice of w + Gram matrix : Gaussian kernel (small n)
    # w = dpik(X); G = exp(-as.matrix(dist(X, diag=T)^2)/2/w^2)/w/sqrt(2*pi)

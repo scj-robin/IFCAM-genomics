@@ -1,7 +1,7 @@
 F_JointPvalueFromObserved <- function(testTab){
    # testTab must contain
-   # a column $tau giving the probabilty to jointly H1 for the pair
-   # a column $stat giving the joist statistic
+   # a column $tau giving the probability to be jointly H1 for the pair
+   # a column $stat giving the joint statistic
    # will return the same table + a column $pval
    # testTab = jointTests
    

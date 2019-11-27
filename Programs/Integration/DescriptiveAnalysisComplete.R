@@ -1,10 +1,10 @@
 # Descriptive statistics
 # Product of 2 gaussian: https://en.wikipedia.org/wiki/Product_distribution#Independent_central-normal_distributions
-library(MASS)
+library(MASS); library(betareg)
 
 rm(list=ls())
 setwd('/home/robin/Bureau/RECHERCHE/EXPRESSION/IFCAM/IFCAM-genomics/Programs/Integration')
-DataDir = ("../../../Data-NotUpload/")
+DataDir = ("/home/robin/Bureau/RECHERCHE/EXPRESSION/IFCAM/Data-NotUpload/")
 library(dplyr)
 
 # Function
@@ -32,16 +32,40 @@ LogExp = t(scale(t(LogExp)))
 
 # Remove NA
 LogExp = LogExp[-which(rowSums(is.na(LogExp))>= ncol(Expression)/2), ]
+saveRDS(LogExp, paste0(DataDir, "LogExp.rds"))
 
 # Status
 TumorIndex = colnames(LogExp) %>% substr(., nchar(.), nchar(.)) %>% `==`('T') %>% which
 NormalIndex = colnames(LogExp) %>% substr(., nchar(.), nchar(.)) %>% `==`('N') %>% which
 Status = rep(0, ncol(LogExp)); Status[TumorIndex] = 1; Status = as.factor(Status)
 
-# test CpGassoc
-library(CpGassoc)
-X = as.vector(as.matrix(Methylation[103, ]))
-CPG = cpg.perm(Methylation[1:3, ], 1*(Status==1), nperm=1e1)
+# BetaReg-test for methylation
+TM = PM = rep(0, nrow(Methylation))
+sapply(1:nrow(Methylation), function(i){
+   if(i%%100==0){cat(i, '')}
+   BetaReg = betareg(as.vector(as.matrix(Methylation[i, ])) ~ Status)
+   TM[i] <<- summary(BetaReg)$coef$mean[2, 3]
+   PM[i] <<- summary(BetaReg)$coef$mean[2, 4]
+   if(i%%1000==0){
+      save(PM, TM, file=paste0(DataDir, "BetaRegTests-Methylation.Rdata"))
+   }
+})
+save(PM, TM, file=paste0(DataDir, "BetaRegTests-Methylation.Rdata"))
+hist(PM[1:nMeth], breaks=sqrt(nMeth))
+hist(TM[1:nMeth], breaks=sqrt(nMeth))
+
+# T-test for methylation
+TE = PE = rep(0, nrow(LogExp))
+sapply(1:nrow(LogExp), function(i){
+   if(i%%100==0){cat(i, '')}
+   Ttest = t.test(as.vector(as.matrix(LogExp[i, ])) ~ Status)
+   TE[i] <<- Ttest$statistic
+   PE[i] <<- Ttest$p.value
+})
+hist(PE, breaks=sqrt(nrow(LogExp)))
+hist(TE, breaks=sqrt(nrow(LogExp)))
+hist(-qnorm(PE), breaks=sqrt(nrow(LogExp)))
+save(PE, TE, file=paste0(DataDir, "TTests-LogExp.Rdata"))
 
 # Association methylation-expression: product of 2 tests
 Pmanova = Ttest = Freg = matrix(NA, nrow(LogExp), max(table(MethInfo$Gene)))
@@ -75,24 +99,24 @@ x.list = seq(-50, 50, length.out=1001)
 # lines(x.list, B/2*w*exp(-abs(sqrt(2)*x.list)), col=2, lwd=2)
 lines(x.list, B*w*besselK(abs(x.list), 0)/pi, col=4, lwd=2)
 
-# Nul prod distribution
-B = 1e4; df = ncol(Expression)-2
-T00 = rt(B, df=df)*rt(B, df=df)
-H = hist(T00, breaks=sqrt(B))
-w = mean(diff(H$breaks))
-x.list = seq(-5, 5, length.out=101)
-lines(x.list, B*w*besselK(abs(x.list), 0)/pi, col=4, lwd=2)
-
-# Nice example : PARP12 / 11
-GeneName = 'PARP12'; ProbeNb = 11
-y = as.vector(as.matrix(Expression[which(rownames(Expression)==GeneName),]))
-y = log(y)
-yy = as.vector(as.matrix(LogExp[which(rownames(LogExp)==GeneName),]))
-xTmp = Methylation[which(MethInfo$Gene==GeneName), ]; 
-x = as.vector(as.matrix(xTmp[ProbeNb, ]))
-plot(x, y, col=Status)
-
-# Test stat Fmanova
-B= 1e3; Fs = rep(0, B); s = Status
-for(b in 1:B){Fs[b] = F_StatMANOVA(rnorm(80), rnorm(80), s)}
-sd(Fs)
+# # Nul prod distribution
+# B = 1e4; df = ncol(Expression)-2
+# T00 = rt(B, df=df)*rt(B, df=df)
+# H = hist(T00, breaks=sqrt(B))
+# w = mean(diff(H$breaks))
+# x.list = seq(-5, 5, length.out=101)
+# lines(x.list, B*w*besselK(abs(x.list), 0)/pi, col=4, lwd=2)
+# 
+# # Nice example : PARP12 / 11
+# GeneName = 'PARP12'; ProbeNb = 11
+# y = as.vector(as.matrix(Expression[which(rownames(Expression)==GeneName),]))
+# y = log(y)
+# yy = as.vector(as.matrix(LogExp[which(rownames(LogExp)==GeneName),]))
+# xTmp = Methylation[which(MethInfo$Gene==GeneName), ]; 
+# x = as.vector(as.matrix(xTmp[ProbeNb, ]))
+# plot(x, y, col=Status)
+# 
+# # Test stat Fmanova
+# B= 1e3; Fs = rep(0, B); s = Status
+# for(b in 1:B){Fs[b] = F_StatMANOVA(rnorm(80), rnorm(80), s)}
+# sd(Fs)
