@@ -216,12 +216,17 @@ $Z^q_k = 0$ if $H^q_{0k}$ holds and 1 otherwise. Let $\Zcal_k$ denote the config
 $$
 f_{\Zcal_k}(\Pcal_k) = \prod_{k: Z^q_k=0} f_0(P^q_k) \times f_{1;\Zcal_k}\left((P^q_k)_{q: Z^q_k=1}\right).
 $$
-In the special case where $Q=2$, we have
+In the special case where $Q=2$, we have $\Pcal_k = (P^1_k, P^2_k)$ and
 \begin{align*}
-  f_{(0,0)}(\Pcal_k) & = \\
-  f_{(0,1)}(\Pcal_k) & = \\
-  f_{(1,0)}(\Pcal_k) & = 
+  f_{(0,0)}(\Pcal_k) & = f_0(P^1_k) f_0(P^2_k) \\
+  f_{(0,1)}(\Pcal_k) & = f_0(P^1_k) f_1(P^2_k) \\
+  f_{(1,0)}(\Pcal_k) & = f_1(P^1_k) f_0(P^2_k) 
 \end{align*}
+but
+$$
+f_{(1,1)}(\Pcal_k) = f_{11}(P^1_k, P^2_k)
+\qquad \text{(no restriction).}
+$$
 so the marginal distributions $f^1_1$ and $f^2_1$ are sufficient to fully define the distribution of $\Pcal_k$ under $\Hcal_{0k}$. \\
 In the case where $Q=3$, we have
 \begin{align*}
