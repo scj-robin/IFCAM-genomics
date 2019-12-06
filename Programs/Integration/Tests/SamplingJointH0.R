@@ -4,6 +4,7 @@ rm(list=ls()); par(mfrow=c(1, 1), pch=20)
 source('../Functions/F_KerFdr.R')
 source('../Functions/F_JointPvalueFromObserved.R')
 
+############################ Data generation
 # Parms
 nA = 1e3; nB = 1e3; p0A = .8; p0B = .8; mu1A = 1; mu1B = 2; P = 1e4
 
@@ -20,6 +21,7 @@ names(jointTests) = c('A', 'B')
 pvalA = pnorm((statA), lower.tail=FALSE); hist(pvalA, breaks=sqrt(nA))
 pvalB = pnorm((statB), lower.tail=FALSE); hist(pvalB, breaks=sqrt(nB))
 
+############################ Data analysis
 # Fitting KerFdr 
 KerFDRA = F_KerFdr(pvalA, rescaleKernWidth=TRUE); tauA = KerFDRA$tau; KerFDRA$p0
 KerFDRB = F_KerFdr(pvalB, rescaleKernWidth=TRUE); tauB = KerFDRB$tau; KerFDRB$p0
@@ -27,7 +29,7 @@ KerFDRB = F_KerFdr(pvalB, rescaleKernWidth=TRUE); tauB = KerFDRB$tau; KerFDRB$p0
 # Make joint table
 jointTests$tau = tauA[jointTests$A]*tauB[jointTests$B]
 jointTests$stat = apply(cbind(statA[jointTests$A], statB[jointTests$B]), 1, min)
-jointTests$H = HA[jointTests$A]*HB[jointTests$B]
+jointTests$H = HA[jointTests$A]*HB[jointTests$B] # not in real life
 
 # Pvalues based on observed pairs (not consistant with the assumption of conditional independence)
 jointTests = F_JointPvalueFromObserved(jointTests)
