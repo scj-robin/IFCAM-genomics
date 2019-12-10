@@ -1,5 +1,6 @@
 rm(list=ls()); par(mfrow=c(1, 1), pch=20)
 library(mvtnorm); library(ROCR)
+setwd('/home/robin/Bureau/RECHERCHE/EXPRESSION/IFCAM/IFCAM-genomics/Programs/Integration/Tests')
 source('../Functions/F_KerFdr.R')
 source('../Functions/F_JointPvalueFromObserved.R')
 
@@ -10,11 +11,11 @@ p = 1e4; alpha = .05
 # Parms: class = 00, 01, 10, 11 -> K = 4
 pi = c(.8, .08, .08, .04); 
 delta = 2*c(1, 2)
-rho0= 0; rho1 = .5
+rho0= .3; rho1 = .5
 
 # Simulation of the test statistics
 K = length(pi)
-mu = matrix(c(0, 0, 0, delta[1], delta[2], 0, delta[1], delta[2]), K, 2, byrow=TRUE)
+mu = matrix(c(0, 0, delta[1], 0, 0, delta[2], delta[1], delta[2]), K, 2, byrow=TRUE)
 Sigma00 = matrix(rho0, 2, 2); diag(Sigma00) = 1
 Sigma11 = matrix(rho1, 2, 2); diag(Sigma11) = 1
 Sigma = list(Sigma00, Sigma00, Sigma00, Sigma11)
@@ -77,18 +78,34 @@ plot(res$pBH, res$kerfdr); abline(0, 1)
 
 ###############################################################################
 # Alternative union p-value
-# Cdf
-F_Ker2Cdf <- function(P, Ker){
+# FdR
+F_Ker2FdR <- function(P, Tau){
    orderP = order(P); rankP = rank(P) 
-   Cdf = cumsum(Ker$tau[orderP]) / (1:length(P))
+   FdR = cumsum(Tau[orderP]) / (1:length(P))
+   return(FdR[rankP])
+}
+Ker1$FdR = F_Ker2FdR(P[, 1], Ker1$tau); Ker2$FdR = F_Ker2FdR(P[, 2], Ker2$tau)
+# FdR
+F_Ker2Cdf <- function(P, Tau){
+   orderP = order(P); rankP = rank(P) 
+   Cdf = cumsum(Tau[orderP]) / sum(Tau)
    return(Cdf[rankP])
 }
-Ker1$Cdf = F_Ker2Cdf(P[, 1], Ker1)
-Ker2$Cdf = F_Ker2Cdf(P[, 2], Ker2)
+Ker1$Cdf = F_Ker2Cdf(P[, 1], Ker1$tau); Ker2$Cdf = F_Ker2Cdf(P[, 2], Ker2$tau)
+# # Cheating empirical FdR under H1
+# eCdf1 = ecdf(P[which((Z==3) | (Z==4)), 1])(P[, 1])
+# eCdf2 = ecdf(P[which((Z==2) | (Z==4)), 2])(P[, 2])
+# # Cheating exact FdR under H1
+# eCdf1 = 1 - pnorm((qnorm(1 - P[, 1])-delta[1]))
+# eCdf2 = 1 - pnorm((qnorm(1 - P[, 2])-delta[2]))
 
 # Pvalue
+# PvalUnion = (crossProb[1, 1] * pmax^2 + crossProb[1, 2] * pmax * Ker2$FdR + 
+#    crossProb[2, 1] * pmax * Ker1$FdR) / (1 - crossProb[2, 2])
+# PvalUnion = (crossProb[1, 1] * pmax^2 + crossProb[1, 2] * pmax * eCdf2 + 
+#                 crossProb[2, 1] * pmax * eCdf2) / (1 - crossProb[2, 2])
 PvalUnion = (crossProb[1, 1] * pmax^2 + crossProb[1, 2] * pmax * Ker2$Cdf + 
-   crossProb[2, 1] * pmax * Ker1$Cdf) / (1 - crossProb[2, 2])
+                crossProb[2, 1] * pmax * Ker1$Cdf) / (1 - crossProb[2, 2])
 hist(PvalUnion, breaks=sqrt(p))
 boxplot(PvalUnion ~ Z)   
 
@@ -106,4 +123,17 @@ table((Z==K), (res$storey<alpha))
 table((Z==K), (res$kerfdr<alpha))
 table((Z==K), (p.adjust(PvalUnion, method='fdr')<alpha))
 table((Z==K), (KerUnion<alpha))
+
+###############################################################################
+# Estimate of the alternative (i.e. intersection of H1's) Cdf of Pmax
+eCdfPmax = ecdf(pmax)(pmax)
+eCdfPmaxH0 = PvalUnion
+eCdfPmaxH1 = F_Ker2Cdf(pmax, Ker1$tau*Ker2$tau)
+trueCdfPmaxH1 = ecdf(pmax[which(Z==4)])(pmax)
+plot(pmax, eCdfPmax); points(pmax, eCdfPmaxH0, col=2)
+# points(pmax, (eCdfPmax - (1 - crossProb[2, 2])*eCdfPmaxH0)/crossProb[2, 2], col=4)
+points(pmax, trueCdfPmaxH1, col=8)
+# points(pmax, (1-crossProb[2, 2])*eCdfPmaxH0 + crossProb[2, 2]*trueCdfPmaxH1, col=6)
+points(pmax, eCdfPmaxH1, col=5)
+points(pmax, (1-crossProb[2, 2])*eCdfPmaxH0 + crossProb[2, 2]*eCdfPmaxH1, col=6)
 

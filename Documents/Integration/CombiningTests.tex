@@ -258,14 +258,14 @@ $$
 \paragraph{Last remarks.} 
 \begin{itemize}
  \item Plus de calcul de $p$-value car classif
- \item Pas d'autre idee que le produit des $\tau^q$ pour le poids dans l'estimation de $f_{1, \Zcal}$
+ \item Pas d'autre idee que le produit des $\tau^q$ pour le poids dans l'estimation de $f_{1, \Zcal}$ (problème seulement pour plus de 2 tests)
  \item Espoir de calcul efficace en se reposant sur le tri des observations $k$ en fonction de la stat $\Pcal_k = \max_q P^q_k$.
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \paragraph{27 / 11 / 2019 : alternative union $p$-value.} 
 \begin{align*}
-	P(P_{\max} < p \mid H_0) 
+	P(P_{\max} < p \mid \Hcal_0) 
 	& = \left(\pi_{00} P(P_{\max} < p \mid H_{00}) + \pi_{01} P(P_{\max} < p \mid H_{01}) + \pi_{10} P(P_{\max} < p \mid H_{10}) \right) / (1- \pi_{11}) \\
 	& = \left(
 	\pi_{00} P(P^1 < p \mid H^1_0) P(P^2 < p \mid H^2_0) 
@@ -280,7 +280,7 @@ $$
 \end{align*}
 where $F_1^q$ can be estimated as
 $$
-\widehat{F}^q_1(p) = \frac{\sum_{i: P^q_i < p} \tau_i^q}{\#\{i: P^q_i < p\}}
+\widehat{F}^q_1(p) = \frac{\sum_{i: P^q_i < p} \tau_i^q}{\sum_{i} \tau_i^q}
 $$
 
 
