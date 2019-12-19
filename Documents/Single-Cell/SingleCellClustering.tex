@@ -48,13 +48,13 @@
  Z_i & \sim \Mcal(1; \pi) \\
  Y_{ij} \mid Z_i = k & \sim \Ncal(\mu + \alpha_i + \beta_j + \gamma_{kj}, \sigma_k^2)
 \end{align*}
-where $\gamma_{kj}$ is blockwise constant along the locations of the genes: proxy for the mean genome copy number at the location of gene $j$ in clster $k$
+where $\gamma_{kj}$ is block-wise constant along the locations of the genes: proxy for the mean genome copy number at the location of gene $j$ in cluster $k$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Inference via fused-lasso}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\paragraph{Penalizedlikelihood.}
+\paragraph{Penalized likelihood.}
 We aim at maximizing
 $$
 \log p_\theta(Y) - n \lambda \sum_k \pi_k \sum_{j\geq 2} |\gamma_{k,j} - \gamma_{k, j-1}|,
@@ -62,16 +62,16 @@ $$
 which amounts at maximizing
 \begin{align*}
  & \Esp \left(\log p_\theta(Y, Z)  \mid Y\right)- \lambda \sum_k \sum_{j\geq 2} |\gamma_{k,j} - \gamma_{k, j-1}| \\
- = & \sum_{i, k} \tau_{ik} \left(\log \pi_k - \frac12 \sum_j \left( \log\sigma^2_k - \frac1{\sigma^2_k} (Y_{ij} - \mu - \alpha_i - \beta_j - \gamma_{kj})^2 \right) \right) \\
+ = & \sum_{i, k} \tau_{ik} \left(\log \pi_k - \frac12 \sum_j \left( \log\sigma_k^2 - \frac1{\sigma_k^2} (Y_{ij} - \mu - \alpha_i - \beta_j - \gamma_{kj})^2 \right) \right) \\
  & \quad - n \lambda \sum_k \pi_k \sum_{j\geq 2} |\gamma_{k,j} - \gamma_{k, j-1}| + \cst
 \end{align*}
 
 \paragraph{Estimating the $\gamma_{kj}$} amounts at minimizing (all other parameters being known),
 \begin{align*}
- & \sum_i \tau_{ik} \sum_j (\Yt_{ij} -\gamma_{kj})^2  + 2 n \pi_k \lambda \sigma^2_k \sum_{j\geq 2} |\gamma_{k,j} - \gamma_{k, j-1}| \\
- = & \sum_i \tau_{ik} \|\Yt_i -\gamma_k\|^2  + 2 n \pi_k \lambda \sigma^2_k \sum_{j\geq 2} |\gamma_{k,j} - \gamma_{k, j-1}| \\
- = & \sum_i \tau_{ik} \|\Yt_i - X_i \delta_k\|^2  + 2 n \pi_k \lambda \sigma^2_k \sum_{j\geq 2} |\delta_{k,j}| \\
- = & \sum_i \|\Yc_i - \Xc_i \delta_k\|^2  + 2 n \pi_k \lambda \sigma^2_k \sum_{j\geq 2} |\delta_{k,j}| \\ 
+ & \sum_i \tau_{ik} \sum_j (\Yt_{ij} -\gamma_{kj})^2  + 2 n \pi_k \lambda \sigma_k^2 \sum_{j\geq 2} |\gamma_{k,j} - \gamma_{k, j-1}| \\
+ = & \sum_i \tau_{ik} \|\Yt_i -\gamma_k\|^2  + 2 n \pi_k \lambda \sigma_k^2 \sum_{j\geq 2} |\gamma_{k,j} - \gamma_{k, j-1}| \\
+ = & \sum_i \tau_{ik} \|\Yt_i - X_i \delta_k\|^2  + 2 n \pi_k \lambda \sigma_k^2 \sum_{j\geq 2} |\delta_{k,j}| \\
+ = & \sum_i \|\Yc_i - \Xc_i \delta_k\|^2  + 2 n \pi_k \lambda \sigma_k^2 \sum_{j\geq 2} |\delta_{k,j}| \\ 
  = & \|\Yc - \Xc \delta_k\|^2  + \lambdat_k \sum_{j\geq 2} |\delta_{k,j}| 
 \end{align*}
 where 
@@ -105,6 +105,12 @@ where $t_{kq}$ is the $q$th change-point in group $k$, which amounts at maximizi
 \end{align*}
 Remind that the Zhang \& Siegmund penalty can be combined with the segments cost.
 
-\paragraph{Estimating the $\gamma_{kj}$.} To be done.
+\paragraph{Estimating the $\gamma_{kj}$.} Denote $I_{kq} = [t_{k, -1}+1, t_{kq}]$ the $\ell$th segment in cells from group $k$ and $Q_k$ the number of segments, we have that
+\begin{align*}
+  \log p_\theta(Y, Z)
+  & = \log p(Z) + \log p(Y \mid Z) \\
+  & = \sum_{i, k} Z_{ik} \left(\log \pi_k - \frac{np}2 \log \sigma_k^2 - \frac1{2\sigma_k^2} \sum_{q=1}^{Qk} \sum_{j \in I_{kq}} (Y_{ij} - \mu - \alpha_i - \beta_j - \gamma_{kq})^2 \right) + \cst
+\end{align*}
+  
 
 \end{document}
