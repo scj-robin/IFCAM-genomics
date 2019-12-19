@@ -108,9 +108,22 @@ Remind that the Zhang \& Siegmund penalty can be combined with the segments cost
 \paragraph{Estimating the $\gamma_{kj}$.} Denote $I_{kq} = [t_{k, -1}+1, t_{kq}]$ the $\ell$th segment in cells from group $k$ and $Q_k$ the number of segments, we have that
 \begin{align*}
   \log p_\theta(Y, Z)
-  & = \log p(Z) + \log p(Y \mid Z) \\
-  & = \sum_{i, k} Z_{ik} \left(\log \pi_k - \frac{np}2 \log \sigma_k^2 - \frac1{2\sigma_k^2} \sum_{q=1}^{Qk} \sum_{j \in I_{kq}} (Y_{ij} - \mu - \alpha_i - \beta_j - \gamma_{kq})^2 \right) + \cst
+  = & \log p(Z) + \log p(Y \mid Z) \\
+  = & \sum_{i, k} Z_{ik} \left(\log \pi_k - \frac{p}2 \log \sigma_k^2 - \frac1{2\sigma_k^2} \sum_{q=1}^{Q_k} \sum_{j \in I_{kq}} (Y_{ij} - \mu - \alpha_i - \beta_j - \gamma_{kq})^2 \right) + \cst
 \end{align*}
-  
+so, denoting $\tau_{ik} := \Esp(Z_{ik} \mid Y)$ and $N_k = \sum_{i} \tau_{ik}$, we get (up to an additive constant)
+\begin{align*}
+  \Esp( \log p_\theta(Y, Z) \mid Y )
+  = & \sum_k N_k \log \pi_k 
+  - \frac{p}2 \sum_k N_k \log \sigma_k^2 \\
+  & - \sum_k \frac1{2\sigma_k^2} \sum_{q=1}^{Q_k} \sum_{j \in I_{kq}} \underset{C_{qk}(\gamma_{kq})}{\underbrace{\sum_i \tau_{ik} (Y_{ij} - \mu - \alpha_i - \beta_j - \gamma_{kq})^2}}. 
+\end{align*}
+For given $\mu$, $\alpha_i$ and $\beta_j$, the minimizer of $C_{qk}(\gamma_{kq})$
+is
+$$
+\widehat{\gamma}_{kq} = \sum_{j \in I_{kq}} \sum_i \tau_{ik} (Y_{ij} - \mu - \alpha_i - \beta_j)
+\left/ \sum_{j \in I_{kq}} \sum_i \tau_{ik}  \right.
+$$
+
 
 \end{document}
