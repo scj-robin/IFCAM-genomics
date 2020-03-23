@@ -10,7 +10,7 @@ simDir <- '../../../Results/Pmax/';
 ## Simul results
 simName <- 'PmaxStudy_NbObs10000_Q8_Sim1'; 
 pValMat <- as.matrix(fread(paste0(simDir, simName, '_PvalMat.txt'), header=TRUE))
-# config <- as.matrix(fread(paste0(simDir, simName, '_Truth.txt'), header=TRUE))
+config <- as.matrix(fread(paste0(simDir, simName, '_Truth.txt'), header=TRUE))
 Q <- ncol(pValMat); n <- nrow(pValMat)
 
 ## Configurations : test 'pMax' = H1 for all tests
