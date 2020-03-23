@@ -1,7 +1,8 @@
 ## Alternative try for the estimation of FDR for combined tests
 
 rm(list=ls()); dev.off(); par(mfrow=c(1, 1), pch=20)
-library(data.table); library(ks); library(mclust); library(spatstat); library(ROCR)
+library(data.table); library(ks); library(mclust); library(spatstat); library(ROCR); 
+library(gtools); library(mvtnorm)
 library(tidyverse); library(data.table)
 source('./Functions.R')
 setwd('/home/robin/RECHERCHE/EXPRESSION/IFCAM/IFCAM-genomics/Programs/Integration/2020/')
@@ -16,13 +17,13 @@ Q <- ncol(pValMat); n <- nrow(pValMat)
 ## Configurations : test 'pMax' = H1 for all tests
 atLeast = Q; Tmp <- GetHinfo(Q, atLeast); Hconfig <- Tmp$Hconfig; Hconfig.H1 <- Tmp$Hconfig.H1
 
-# ## New simulations
-# n <- 1e4; Q <- 8; seed <- 1; set.seed(seed); simName <- paste0('NewSimSR_NbObs', n, '_Q', Q, '_Sim', seed); 
-# DirichletProp <- c(8, 2); MinPropForHconfig.H1 <- 0.03; MinNbOfUnitPerHconfig.H1 <- 5; Rho0 <- 0; Rho1 <- 0; 
-# Delta <- sqrt(2*(1:Q))
-# simul <- GeneratePvalues(n, Q, DirichletProp, Hconfig, Hconfig.H1, MinPropForHconfig.H1, Delta, 
-#                          Rho0, Rho1, MinNbOfUnitPerHconfig.H1)
-# pValMat <- simul$P; config <- simul$Truth
+## New simulations
+n <- 1e4; Q <- 8; seed <- 1; set.seed(seed); simName <- paste0('NewSimSR_NbObs', n, '_Q', Q, '_Sim', seed);
+DirichletProp <- c(8, 2); MinPropForHconfig.H1 <- 0.03; MinNbOfUnitPerHconfig.H1 <- 5; Rho0 <- 0; Rho1 <- 0;
+Delta <- sqrt(2*(1:Q))
+simul <- GeneratePvalues(n, Q, DirichletProp, Hconfig, Hconfig.H1, MinPropForHconfig.H1, Delta,
+                         Rho0, Rho1, MinNbOfUnitPerHconfig.H1)
+pValMat <- simul$P; config <- simul$Truth
 
 ## True H1 & pMax
 H1 <- 1*(config==Hconfig.H1); pMax <- pValH1 <- GetPH1(pValMat, atLeast)
@@ -52,12 +53,12 @@ tauHconfig <- sapply(Hconfig, function(h){
    if (length(which(h==0)) > 0){tau <- tau + rowSums(log1_TauMat[, which(h==0), drop=FALSE])}
    return(exp(tau))
 })
-priorHconfig <- colMeans(tauHconfig)
-priorH1 <- priorHconfig[Hconfig.H1]; tauH1 <- tauHconfig[, Hconfig.H1]
+priorHconfigOld <- colMeans(tauHconfig)
+tauH1 <- tauHconfig[, Hconfig.H1]
 
 ## Combined p-values
-pValUnionH1 <- ComputePValue(pValMat, logTauMat, Hconfig, Hconfig.H1, priorHconfig, pValH1, Method='H1')
-pValUnionH0 <- ComputePValue(pValMat, logTauMat, Hconfig, Hconfig.H1, priorHconfig, pValH1, Method='H0')
+pValUnionH1 <- ComputePValue(pValMat, logTauMat, Hconfig, Hconfig.H1, priorHconfigOld, pValH1, Method='H1')
+pValUnionH0 <- ComputePValue(pValMat, logTauMat, Hconfig, Hconfig.H1, priorHconfigOld, pValH1, Method='H0')
 par(mfrow=c(2, 2))
 hist(pValH1, breaks=sqrt(n)); hist(log(tauH1), breaks=sqrt(n))
 hist(pValUnionH1, breaks=sqrt(n)); hist(pValUnionH0, breaks=sqrt(n))
@@ -84,16 +85,16 @@ plot(performance(prediction(tauH1, H1), 'tpr', 'fpr'), col=6, add=TRUE, lwd=2, l
 priorHconfigTrue <- sapply(1:length(Hconfig), function(c){sum(config==c)})/n
 ###############################################################################
 ## Alternative estimates of the prior
-priorHconfigFit <- sapply(1:length(Hconfig), function(c){
+priorHconfigNew <- sapply(1:length(Hconfig), function(c){
    prod(p0fit[which(Hconfig[[c]]==0)]) * prod(1-p0fit[which(Hconfig[[c]]==1)])
 })
-plot(priorHconfigTrue, priorHconfig, log='xy'); abline(0, 1)
-points(priorHconfigTrue, priorHconfigFit, col=2)
+plot(1e-4+priorHconfigTrue, 1e-4+priorHconfigOld, log='xy'); abline(0, 1)
+points(1e-4+priorHconfigTrue, 1e-4+priorHconfigNew, col=2)
 
 ###############################################################################
 ## Same analysis as before choosing the estimates
 ## Combining p-values
-priorTest <- priorHconfigFit # priorHconfigTrue, priorHconfig, priorHconfigFit
+priorTest <- priorHconfigOld # priorHconfigTrue, priorHconfigOld, priorHconfigNew
 pValUnionH1Test <- ComputePValue(pValMat, logTauMat, Hconfig, Hconfig.H1, priorTest, pValH1, Method='H1')
 pValUnionH0Test <- ComputePValue(pValMat, logTauMat, Hconfig, Hconfig.H1, priorTest, pValH1, Method='H0')
 # par(mfrow=c(2, 2))
