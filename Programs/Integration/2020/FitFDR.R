@@ -1,6 +1,6 @@
 ## Alternative try for the estimation of FDR for combined tests
 
-rm(list=ls()); dev.off(); par(mfrow=c(1, 1), pch=20)
+rm(list=ls()); par(mfrow=c(1, 1), pch=20)
 library(data.table); library(ks); library(mclust); library(spatstat); library(ROCR); 
 library(gtools); library(mvtnorm)
 library(tidyverse); library(data.table)
@@ -94,7 +94,7 @@ points(1e-4+priorHconfigTrue, 1e-4+priorHconfigNew, col=2)
 ###############################################################################
 ## Same analysis as before choosing the estimates
 ## Combining p-values
-priorTest <- priorHconfigOld # priorHconfigTrue, priorHconfigOld, priorHconfigNew
+priorTest <- priorHconfigNew # priorHconfigTrue, priorHconfigOld, priorHconfigNew
 pValUnionH1Test <- ComputePValue(pValMat, logTauMat, Hconfig, Hconfig.H1, priorTest, pValH1, Method='H1')
 pValUnionH0Test <- ComputePValue(pValMat, logTauMat, Hconfig, Hconfig.H1, priorTest, pValH1, Method='H0')
 # par(mfrow=c(2, 2))
@@ -107,6 +107,7 @@ par(mfrow=c(1, 1))
 orderPMax <- order(pMax); rankPMax <- rank(pMax)
 trueFDR <- (cumsum(1-H1[orderPMax])/(1:n))[rankPMax]; plot(pMax, trueFDR, ylim=c(0, 1))
 tauH1FDR <- (cumsum(1-tauH1[orderPMax])/(1:n))[rankPMax]; points(pMax, tauH1FDR, col=6)
-pValUnionH1TestFDR <- p.adjust(pValUnionH1Test, method='BH'); points(pMax, pValUnionH1TestFDR, col=2)
-pValUnionH0TestFDR <- p.adjust(pValUnionH0Test, method='BH'); points(pMax, pValUnionH0TestFDR, col=4)
+pi0 <- sum(pValUnionH0Test>.5)/(n/2)
+pValUnionH1TestFDR <- pi0*p.adjust(pValUnionH1Test, method='BH'); points(pMax, pValUnionH1TestFDR, col=2)
+pValUnionH0TestFDR <- pi0*p.adjust(pValUnionH0Test, method='BH'); points(pMax, pValUnionH0TestFDR, col=4)
 # dev.off()
