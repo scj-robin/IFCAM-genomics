@@ -97,6 +97,7 @@ GetPH1 <- function(PvalMat,AtLeast){
 ########################   FastKerFdr   ####################
 
 FastKerFdr <- function(Pval,p0=NULL,plotting=FALSE,NbKnot=1e5,tol = 1e-5){
+   ## Pval <- pValMat[, 1]; NbKnot=1e5; tol = 1e-5
 
   ## Transform pvalues into N(0,1) quantiles
   n = length(Pval)
@@ -140,11 +141,16 @@ FastKerFdr <- function(Pval,p0=NULL,plotting=FALSE,NbKnot=1e5,tol = 1e-5){
     tau = tauNew
   }
   if(plotting){
+     ## Pourquoi a-t-onbesoin de ce MAX ?
     Max=max(p0*phi+p1*f1)
-    plot(Knots, p0*phi, type='l', main='', col=4,lwd=2,ylim=c(0,Max),
-         xlab="Q-transformed pvalues",ylab="Densities"); 
-    lines(Knots, p1*f1, col=2,lwd=2); 
-    lines(Knots, p0*phi+p1*f1 + 0.01*Max,lwd=2,lty=2)
+    Hist.fig <- hist(X, freq=TRUE, breaks=sqrt(n), main='', border=8, 
+                     xlab="Q-transformed pvalues", ylab="Densities")
+    bin.width <- mean(diff(Hist.fig$breaks))
+    # lines(Knots, n*bin.width*p0*phi, type='l', col=4,lwd=2,ylim=c(0,Max)); 
+    lines(Knots, n*bin.width*p0*phi, type='l', col=4, lwd=2); 
+    lines(Knots, n*bin.width*p1*f1, col=2,lwd=2); 
+    # lines(Knots, n*bin.width*(p0*phi+p1*f1) + 0.01*Max,lwd=2,lty=2)
+    lines(Knots, n*bin.width*(p0*phi+p1*f1), lwd=2)
     legend("topright", legend=c("H0 dist", "H1 dist","Mixture Dist"),
            col=c("blue","red", "black"), lty=c(1,1,2), cex=0.8)  
   }
@@ -154,10 +160,12 @@ FastKerFdr <- function(Pval,p0=NULL,plotting=FALSE,NbKnot=1e5,tol = 1e-5){
   f1 = KDE$estimate
   tau = p1*f1 / (p1*f1 + p0*dnorm(X))
   
-  return(list(p0=p0,tau=tau))
+  return(list(p0=p0,tau=tau,f1=f1))
 }  
 
-
+PlotPvalHistDist <- function(Pval, p0, f1){
+   
+}
 
 ########################   GetTrueMargTau   ####################
 
@@ -218,10 +226,10 @@ ComputePValue <- function(PvalMat,LogTau.MixtMarg,Hconfig,Hconfig.H1,Prior.Hconf
       #   H1comp <- Tau2Cdf(P.H1.h, tau.h, P.H1)
       #   Res<- H1comp * (P.H1^sum(h==0))
       # })
-      Cdf.Hconfig.H1 <- LogTau.MixtMarg %>% 
-        rowSums %>% 
-        exp %>% 
-        Tau2Cdf(P.H1, ., P.H1) 
+      Cdf.Hconfig.H1 <- LogTau.MixtMarg %>%
+        rowSums %>%
+        exp %>%
+        Tau2Cdf(P.H1, ., P.H1)
       Num <- Tau2Cdf(P.H1,rep(1/n,n),P.H1) - Cdf.Hconfig.H1*Prior.Hconfig.H1
       Den <-1-sum(Prior.Hconfig.H1)
       PvalUnion =  Num/Den 
