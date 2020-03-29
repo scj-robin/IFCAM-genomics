@@ -6,7 +6,7 @@ library(spatstat);
 library(ROCR)
 library(tidyverse); 
 library(data.table)
-setwd('D:/IFCAM/IFCAM-genomics/Programs/Integration/2020/')
+# setwd('D:/IFCAM/IFCAM-genomics/Programs/Integration/2020/')
 source('./Functions.R')
 
 
@@ -51,11 +51,11 @@ for(q in 1:Q){
 }
 f0Mat <- matrix(dnorm(-qnorm(pValMat)),ncol=Q)
 
-##Just to check
-plot(-qnorm(pValMat[,1]),f0Mat[,1]*p0[1]+ f1Mat[,1]*(1-p0[1]),cex=0.7)
-points(-qnorm(pValMat[,1]),f0Mat[,1]*p0[1],col=4,cex=0.7)
-points(-qnorm(pValMat[,1]),f1Mat[,1]*(1-p0[1]),col=2,cex=0.7)
-par(mfrow=c(1,1))
+# ##Just to check
+# plot(-qnorm(pValMat[,1]),f0Mat[,1]*p0[1]+ f1Mat[,1]*(1-p0[1]),cex=0.7)
+# points(-qnorm(pValMat[,1]),f0Mat[,1]*p0[1],col=4,cex=0.7)
+# points(-qnorm(pValMat[,1]),f1Mat[,1]*(1-p0[1]),col=2,cex=0.7)
+par(mfrow=c(1,1), pch=20)
 
         #### From marginal to config densities
 
@@ -84,7 +84,7 @@ posteriors <- posteriors/rowSums(posteriors)
 localFDR <- 1-posteriors[,length(Hconfig)]
 Order <- order(localFDR)
 FDR <- cumsum(localFDR[Order])/(1:n)
-plot(FDR)
+plot(FDR, type='l', lwd=2)
 NbReject <- max(which(FDR<=0.05))
 Rejection <- rep(0,n)
 Rejection[Order[1:NbReject]] <- 1
@@ -114,7 +114,7 @@ posteriors <- posteriors/rowSums(posteriors)
 localFDR <- 1-posteriors[,length(Hconfig)]
 Order <- order(localFDR)
 FDR <- cumsum(localFDR[Order])/(1:n)
-plot(FDR)
+plot(FDR, type='l', lwd=2)
 NbReject <- max(which(FDR<=0.05))
 NbReject
 #We lose everything...
@@ -156,7 +156,7 @@ posteriors <- posteriors/rowSums(posteriors)
 localFDR <- 1-posteriors[,length(Hconfig)]
 Order <- order(localFDR)
 FDR <- cumsum(localFDR[Order])/(1:n)
-plot(FDR)
+plot(FDR, type='l', lwd=2)
 lines(cumsum(as.numeric(config[Order]!=NbConfig))/(1:n),col=2,lwd=2)
 NbReject <- max(which(FDR<=0.05))
 NbReject
