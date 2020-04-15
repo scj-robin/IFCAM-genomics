@@ -1,0 +1,215 @@
+---
+title: "Segmentation/clustering on normalized data"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = '',message = FALSE,warning = FALSE)
+```
+
+
+
+```{r}
+# Library and paths
+rm(list=ls())
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(data.table)
+library(factoextra)
+library(gfpop)
+library(mclust)
+```
+
+
+
+# Data description, filtering and normalization
+```{r}
+Rep <-"/Users/lebarbier/Desktop/Projets/IFCAM-genomics/Programs/Single-Cell" 
+setwd(Rep)
+dataDir <- "../../Data/Single-Cell/"
+RawCountsFile <- "T17225-counts.tsv"
+```
+
+## Raw count data
+```{r}
+RawCounts <- as.data.frame(fread(paste0(dataDir, RawCountsFile)))
+rownames(RawCounts) <- RawCounts[, 1];RawCounts <- RawCounts[, -1]
+RawCounts[1:5, 1:5]
+NbCell <-nrow(RawCounts) 
+NbGene <- ncol(RawCounts)
+```
+
+Il y a `r NbCell` cellules et `r NbGene` gènes.
+
+
+
+## Filtering 
+
+### On the cells and first normalization
+
+Nombre total par cellule 
+```{r}
+TotalCountPerCell <- RawCounts %>% rowSums 
+TotalCountPerCell %>% as.tibble() %>% summarise_all(.,funs(n(),min,mean,median,max))
+hist(log10(TotalCountPerCell), breaks=sqrt(NbCell))
+```
+
+
+Expression moyenne par cellules. 
+```{r}
+ThresholdMeanExp <- 1
+NumberCellKeep <-which(rowMeans(RawCounts)>=ThresholdMeanExp)
+RawCountsFilterCell <- RawCounts[NumberCellKeep,]
+NbCellAfterRmv <- nrow(RawCountsFilterCell)
+```
+On enleve les cellules qui ont une expression moyenne inférieure à `r ThresholdMeanExp`. Après ce filtrage, il reste `r NbCellAfterRmv` cellules.
+
+
+Normalisation w.r.t. nombre total par cellule
+```{r}
+NormCounts <- RawCountsFilterCell/TotalCountPerCell[NumberCellKeep]
+```
+
+
+### On the genes
+Total par gene 
+```{r}
+TotalCountPerGene <- NormCounts %>% colSums
+TotalCountPerGene %>% as.tibble %>% summarise_all(.,funs(n(),min,mean,median,max))
+hist(log10(TotalCountPerGene), breaks=sqrt(NbGene))
+```
+
+
+On enlève les gènes d'expression nulle
+```{r}
+NormCounts <- NormCounts[,-which(TotalCountPerGene==0)]
+```
+
+Variance par gène. Je retire les gènes de trop petite variance. 
+```{r}
+VarPerGene <- colMeans(NormCounts**2)-colMeans(NormCounts)**2
+hist(log10(VarPerGene),100)
+
+X=log10(VarPerGene)
+group.VarPerGene <- Mclust(X,modelNames = "E")
+hist(log10(VarPerGene),100)
+par(new=T)
+plot(group.VarPerGene,what="density")
+table(group.VarPerGene$classification)
+plot(group.VarPerGene, what = "classification")
+
+NormCountsF <- NormCounts[,-which(group.VarPerGene$classification<=2)]
+NbGeneAfterRmv <- ncol(NormCountsF)
+```
+Il reste `r NbGeneAfterRmv`.
+
+
+## Compute scaled expression profiles for cells
+```{r}
+NormCountsF.scaled <- t(NormCountsF) %>% scale %>% t()
+p <- NbGeneAfterRmv
+n <- NbCellAfterRmv
+```
+
+
+## Cell clustering on the normalized data
+```{r}
+Dist.Cell <- dist(x = NormCountsF.scaled)
+HclustCell <- hclust(d = Dist.Cell,method = "ward.D2")
+inertie <- sort(HclustCell$height, decreasing = TRUE)
+plot(inertie[1:20], type = "s")
+
+NbClust=5
+#Dendrogramme
+fviz_dend(HclustCell,horiz = TRUE, cex = 0.5, k = NbClust, color_labels_by_k = TRUE)
+
+Cluster.Cell <- cutree(HclustCell, k = NbClust)
+MeanProfileByClust <-
+  NormCountsF.scaled %>% as.tibble %>% mutate(cluster = as.factor(Cluster.Cell)) %>% group_by(cluster) %>%  summarise_all(funs(mean))  %>% gather(value = MeanSegExp, key = Gene, -cluster) 
+
+# Mean expression per group 
+MeanProfileByClust %>%
+  ggplot(aes(x = Gene, y = MeanSegExp, group = cluster)) +
+  geom_line(aes(color = cluster))
+
+# Proportion de profils dans chaque groupe
+PropClust.Cell <- Cluster.Cell %>%tibble %>% setnames("cluster") %>%  group_by(cluster) %>% summarise(NbCell=n()) 
+PropClust.Cell
+```
+
+
+# Segmentation/Clustering
+
+## Segmentation with fgpop (faster than Segmentor3Isback) and a penalty function 2*log(p)
+```{r}
+Seg <- function(data,i){
+  signal <- as.numeric(data[i,])
+  n <- ncol(data)
+  myGraphStd <- graph(penalty = 2*log(n), type = "std")
+  ResSeg=gfpop(data =  signal, mygraph = myGraphStd, type = "mean")
+  rupt=ResSeg$changepoints 
+  Kselect<- length(rupt)
+  rupt.bin <- rep(0,n) 
+  rupt.bin[rupt] <- 1
+  rupt.bin[n] <- 0
+  y.pred.per.segment <-ResSeg$parameters
+  y.pred <- rep(y.pred.per.segment,diff(c(0,rupt))) 
+  return(list(Kselect=Kselect,rupt=rupt,rupt.bin=rupt.bin,y.pred=y.pred))
+}
+
+
+R <- purrr::map(1:n,~Seg(NormCountsF.scaled,.x) )
+
+CellKselect <-  map_dbl(R,~ .x$Kselect)
+CellRupt.mean.pos <-R %>% purrr::map(.,"rupt.bin") %>% do.call(rbind,.) %>% colMeans(.)
+CellPred <- R %>% purrr::map(.,"y.pred") %>% do.call(rbind,.) %>% as.data.frame() 
+colnames(CellPred) <- colnames(NormCountsF.scaled)
+rownames(CellPred) <- rownames(NormCountsF.scaled)
+
+#Graphes
+#Nombre de segments par profil
+plot(1:n,CellKselect,ylab="Number of segments",xlab="cell")
+#fréquence des ruptures
+plot(1:p,CellRupt.mean.pos,ylab="change position frequency",xlab="gene")
+```
+
+
+## Clustering
+```{r}
+Dist.CellSeg <- dist(CellPred)
+HclustCellSeg <- hclust(d = Dist.CellSeg,method = "ward.D2")
+inertie <- sort(HclustCellSeg$height, decreasing = TRUE)
+plot(inertie[1:20], type = "s")
+NbClustSeg=5
+#Dendrogramme
+fviz_dend(HclustCellSeg,horiz = TRUE, cex = 0.5, k = NbClustSeg, color_labels_by_k = TRUE)
+
+Cluster.CellSeg <- cutree(HclustCellSeg, k = NbClustSeg)
+MeanProfileCellSegByClust <-
+  CellPred %>% mutate(cluster = as.factor(Cluster.CellSeg)) %>% group_by(cluster) %>%  summarise_all(funs(mean))  %>% gather(value = MeanSegExp, key = Gene, -cluster) 
+
+# Profils moyens segmentés dans chaque groupe
+MeanProfileCellSegByClust %>%
+  ggplot(aes(x = Gene, y = MeanSegExp, group = cluster)) +
+  geom_line(aes(color = cluster))
+
+# Proportion de profils dans chaque groupe
+PropClust.CellSeg <- Cluster.CellSeg %>%tibble %>% setnames("cluster") %>%  group_by(cluster) %>% summarise(NbCell=n()) 
+PropClust.CellSeg
+
+# Comparaison entre les deux classif
+table(Cluster.CellSeg,Cluster.Cell,dnn=c("Seg","WithoutSeg"))
+```
+
+
+
+
+
+
+
+
+
+
+
+
