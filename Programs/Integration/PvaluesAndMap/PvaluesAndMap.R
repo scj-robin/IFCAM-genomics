@@ -25,11 +25,13 @@ mapPvalAlone[which(mapPvalAlone > 1-1e-14)] <- 1 - 1e-14
 # Fitting marginals and proportions
 par(mfrow=c(Q/2, 2))
 if(!file.exists(paste0(dataDir, 'pvalue.map.I.II.IV-marginals.Rdata'))){
-   ResMMP <- MixtModProcedure(mapPvalAlone, mapConfig)
-   save(ResMMP, file=paste0(dataDir, 'pvalue.map.I.II.IV-marginals.Rdata'))
+   marginalFit <- MixtModProcedure(mapPvalAlone, mapConfig)
+   save(marginalFit, file=paste0(dataDir, 'pvalue.map.I.II.IV-marginals.Rdata'))
 }
 load(paste0(dataDir, 'pvalue.map.I.II.IV-marginals.Rdata'))
-postConfig <- apply(ResMMP$posterior, 1, which.max)
+postConfig <- apply(marginalFit$posterior, 1, which.max)
+par(mfrow=c(1, 1)); image(1:2^Q, 1:2^Q, t(marginalFit$posterior)%*%marginalFit$posterior)
+image(1:Q, 1:Q, t(marginalFit$tauKer)%*%marginalFit$tauKer)
 
 # At least one significant pair exp-meth
 composedName <- 'atLeastOnePair'
@@ -39,7 +41,7 @@ atLeastOnePairH1 <- which(unlist(lapply(mapConfig, function(config){
 atLeastOnePairH1
 t(sapply(atLeastOnePairH1, function(c){mapConfig[[c]]}))
 
-atLeastOnePairRes <- PerformMultipleTestingEM(posterior=ResMMP$posterior, Hconfig.H1=atLeastOnePairH1, Alpha=.05)
+atLeastOnePairRes <- PerformMultipleTestingEM(posterior=marginalFit$posterior, Hconfig.H1=atLeastOnePairH1, Alpha=.05)
 H1list <- which(atLeastOnePairRes$Rejection==1)
 atLeastOnePairSel <- mapPval[H1list, ]
 atLeastOnePairSel$lFdr <- atLeastOnePairRes$lFDR[H1list]
@@ -59,7 +61,7 @@ exactlyOnePairH1 <- which(unlist(lapply(mapConfig, function(config){
 exactlyOnePairH1
 t(sapply(exactlyOnePairH1, function(c){mapConfig[[c]]}))
 
-exactlyOnePairRes <- PerformMultipleTestingEM(posterior=ResMMP$posterior, Hconfig.H1=exactlyOnePairH1, Alpha=.05)
+exactlyOnePairRes <- PerformMultipleTestingEM(posterior=marginalFit$posterior, Hconfig.H1=exactlyOnePairH1, Alpha=.05)
 H1list <- which(exactlyOnePairRes$Rejection==1)
 exactlyOnePairSel <- mapPval[H1list, ]
 exactlyOnePairSel$lFdr <- exactlyOnePairRes$lFDR[H1list]
