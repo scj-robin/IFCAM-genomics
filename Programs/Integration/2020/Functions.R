@@ -416,10 +416,11 @@ MixtModProcedure <- function(pValMat,Hconfig){
   }
   
   ## Fit a 2-component mixture to each test serie using kerFdr
-  f1Mat <- matrix(1, n, Q); 
+  f1Mat <- tauKerMat <- matrix(1, n, Q); 
   for(q in SomeH1){
     ker <- FastKerFdr(pValMat[, q], p0=p0[q], plotting=TRUE)
-    f1Mat[,q] <- ker$f1
+    f1Mat[, q] <- ker$f1
+    tauKerMat[, q] <- ker$tau
   }
   f0Mat <- matrix(dnorm(-qnorm(pValMat)),ncol=Q)
   
@@ -475,7 +476,7 @@ MixtModProcedure <- function(pValMat,Hconfig){
   posterior <- posterior/rowSums(posterior)
   
   #### Last but not least: output results
-  Res <- list(prior=priorHconfigEM, posterior=posterior)
+  Res <- list(prior=priorHconfigEM, posterior=posterior, Tau=Tau, tauKer=tauKerMat)
   return(Res)
 }
 

@@ -12,11 +12,6 @@ head(mapPval); n <- nrow(mapPval)
 # Configurations : at least comp with significant exp and meth
 Q <- 6; expQ <- Q/2
 mapConfig <- GetHinfo(Q, Q)$Hconfig
-mapConfigH1 <- which(unlist(lapply(mapConfig, function(config){
-   sum(config[1:expQ] * config[expQ+(1:expQ)]) >=1
-   })))
-mapConfigH1
-t(sapply(mapConfigH1, function(c){mapConfig[[c]]}))
 
 # Fitting marginals
 mapPvalAlone <- as.matrix(mapPval[, -(1:5)])
@@ -27,14 +22,50 @@ mapPvalAlone[which(mapPvalAlone > 1-1e-14)] <- 1 - 1e-14
 #    try(FastKerFdr(mapPvalAlone[, q], plotting=TRUE))
 #    })
 
-# Whole procedure
-ResMMP <- MixtModProcedure(mapPvalAlone, mapConfig)
-names(ResMMP); dim(ResMMP$posterior); dim(mapPval)
-finalRes <- PerformMultipleTestingEM(posterior=ResMMP$posterior, Hconfig.H1=mapConfigH1, Alpha=.05)
-length(finalRes)
-H1list <- which(finalRes==1)
-mapH1 <- mapPval[which(finalRes==1), 1:3]
-table(mapH1$gene)
-table(mapH1$cpg)
+# Fitting marginals and proportions
+par(mfrow=c(Q/2, 2))
+if(!file.exists(paste0(dataDir, 'pvalue.map.I.II.IV-marginals.Rdata'))){
+   ResMMP <- MixtModProcedure(mapPvalAlone, mapConfig)
+   save(ResMMP, file=paste0(dataDir, 'pvalue.map.I.II.IV-marginals.Rdata'))
+}
+load(paste0(dataDir, 'pvalue.map.I.II.IV-marginals.Rdata'))
+postConfig <- apply(ResMMP$posterior, 1, which.max)
 
-           
+# At least one significant pair exp-meth
+composedName <- 'atLeastOnePair'
+atLeastOnePairH1 <- which(unlist(lapply(mapConfig, function(config){
+   sum(config[1:expQ] * config[expQ+(1:expQ)]) >=1
+})))
+atLeastOnePairH1
+t(sapply(atLeastOnePairH1, function(c){mapConfig[[c]]}))
+
+atLeastOnePairRes <- PerformMultipleTestingEM(posterior=ResMMP$posterior, Hconfig.H1=atLeastOnePairH1, Alpha=.05)
+H1list <- which(atLeastOnePairRes$Rejection==1)
+atLeastOnePairSel <- mapPval[H1list, ]
+atLeastOnePairSel$lFdr <- atLeastOnePairRes$lFDR[H1list]
+configH1 <- t(sapply(H1list, function(i){mapConfig[[postConfig[i]]]}))
+atLeastOnePairSelconfig <- cbind(atLeastOnePairSel, postConfig[H1list], configH1)
+names(atLeastOnePairSelconfig)[13] <- 'bestConfig'
+save(atLeastOnePairSelconfig, file=paste0(dataDir, 'pvalue.map.I.II.IV-', composedName, '.Rdata'))
+table(atLeastOnePairSel$gene)
+table(atLeastOnePairSel$cpg)
+
+# Exactly one significant pair exp-meth
+composedName <- 'exactlyOnePair'
+exactlyOnePairH1 <- which(unlist(lapply(mapConfig, function(config){
+   (prod(config == c(1, 0, 0, 1, 0, 0))==1) | 
+       (prod(config == c(0, 1, 0, 0, 1, 0))==1) | (prod(config == c(0, 0, 1, 0, 0, 1))==1)
+})))
+exactlyOnePairH1
+t(sapply(exactlyOnePairH1, function(c){mapConfig[[c]]}))
+
+exactlyOnePairRes <- PerformMultipleTestingEM(posterior=ResMMP$posterior, Hconfig.H1=exactlyOnePairH1, Alpha=.05)
+H1list <- which(exactlyOnePairRes$Rejection==1)
+exactlyOnePairSel <- mapPval[H1list, ]
+exactlyOnePairSel$lFdr <- exactlyOnePairRes$lFDR[H1list]
+configH1 <- t(sapply(H1list, function(i){mapConfig[[postConfig[i]]]}))
+exactlyOnePairSelconfig <- cbind(exactlyOnePairSel, postConfig[H1list], configH1)
+names(exactlyOnePairSelconfig)[13] <- 'bestConfig'
+save(exactlyOnePairSelconfig, file=paste0(dataDir, 'pvalue.map.I.II.IV-', composedName, '.Rdata'))
+table(exactlyOnePairSel$gene)
+table(exactlyOnePairSel$cpg)
